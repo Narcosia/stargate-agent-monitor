@@ -22,15 +22,19 @@ notify system. That work hasn't been done yet.
 
 ### What you need
 
-- Waveshare ESP32-S3-Touch-AMOLED-1.75-B (the screen in the middle of the gate)
-- 24 × WS2812B ring, 72 mm OD / 60 mm ID (built with a Jaycar XC4385)
-- 1N5822 Schottky diode + 330 Ω resistor, three short hook-up wires
-- 14 × M2 heat-set inserts and M2 screws (4 × 8 mm pan, 4 × 10 mm countersunk,
+- [Waveshare ESP32-S3-Touch-AMOLED-1.75-B](https://www.aliexpress.com/item/1005009067973350.html), the screen in the middle of
+  the gate (AliExpress: choose the **with protective case** option, which the
+  enclosure is sized for)
+- 24 × WS2812B ring, 72 mm OD / 60 mm ID (built with a [Jaycar XC4385](https://www.jaycar.co.nz/arduino-compatible-ws2812b-rgb-led-circular-strip/p/XC4385))
+- [1N5822 Schottky diode](https://www.jaycar.co.nz/diode-1n5822-schottky-40v-3a-do-27/p/ZR1048) + [330 Ω 0.5 W resistor](https://www.jaycar.co.nz/330-ohm-0-5-watt-metal-film-resistors-pack-of-8/p/RR0560), and
+  three short [hook-up leads](https://www.jaycar.co.nz/150mm-plug-to-plug-jumper-leads-40-piece/p/WC6024) (all Jaycar NZ)
+- 14 × [M2 heat-set inserts](https://www.aliexpress.com/item/1005004837433548.html) and M2 screws (4 × 8 mm pan, 4 × 10 mm countersunk,
   2 × 20 mm pan, 4 × 6 mm pan), plus 1.75 mm filament offcuts for pins
 - Filament: grey and black (two-colour glyph front, via AMS), black or red
   (chevrons), translucent PETG (diffuser)
 
-Everything else, including the exact wiring, is on the
+Links go to New Zealand stock, but any equivalent part works. Everything
+else, including the exact wiring, is on the
 [writeup page](https://narcosia.github.io/stargate-agent-monitor/).
 
 ## Ring firmware (MicroPython, repo root)
