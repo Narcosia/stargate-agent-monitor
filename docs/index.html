@@ -1,0 +1,1063 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stargate Agent Monitor</title>
+<meta name="description" content="A Stargate on your desk that shows which Claude Code sessions are working and which are waiting on you — ESP32 + 24-LED ring, parametric OpenSCAD enclosure. What it is, materials, printing, assembly, setup.">
+<style>
+  /* ---------- tokens: Third Brain Neon ---------- */
+  :root {
+    --bg-0: #060310;
+    --bg-1: #0c0620;
+    --bg-2: #1a0b3a;
+    --bg-3: #2c1f52;
+    --ink: #E9E6FF;
+    --ink-2: #CDC7EA;
+    --mute: #7C76A8;
+    --cyan: #22E0FF;
+    --magenta: #FF2EA6;
+    --violet: #8A5CFF;
+    --coral: #FF6B7A;
+    --line: rgba(138, 92, 255, .22);
+    --line-2: rgba(34, 224, 255, .18);
+    --font-display: "Bahnschrift", "DIN Alternate", "Franklin Gothic Medium", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+    --font-body: "Segoe UI Variable Text", "Segoe UI", "Bahnschrift", system-ui, sans-serif;
+    --font-mono: "Cascadia Code", "JetBrains Mono", "Fira Code", Consolas, "SF Mono", monospace;
+    --w: 1080px;
+    --nav-w: 232px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+  body {
+    margin: 0;
+    background: var(--bg-0);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: rgba(255,46,166,.35); color: #fff; }
+  a { color: var(--cyan); text-decoration: none; }
+  a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--magenta); outline-offset: 3px; border-radius: 3px; }
+  code, kbd, pre { font-family: var(--font-mono); font-size: .92em; }
+  code { color: var(--cyan); background: rgba(34,224,255,.07); padding: .08em .38em; border-radius: 4px; }
+  pre {
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--cyan);
+    border-radius: 6px;
+    padding: 14px 18px;
+    overflow-x: auto;
+    line-height: 1.5;
+    margin: 14px 0 20px;
+  }
+  pre code { background: none; padding: 0; color: var(--ink-2); }
+  pre .c { color: var(--mute); }
+  pre .k { color: var(--magenta); }
+  h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; letter-spacing: .01em; line-height: 1.15; margin: 0; }
+  h2 { font-size: clamp(26px, 3vw, 34px); color: #fff; }
+  h3 { font-size: 19px; color: var(--ink); margin: 34px 0 10px; }
+  h3 .n { color: var(--magenta); font-family: var(--font-mono); font-size: 13px; letter-spacing: .12em; margin-right: 10px; }
+  p { margin: 0 0 14px; color: var(--ink-2); }
+  p strong, li strong { color: var(--ink); font-weight: 600; }
+  ul, ol { color: var(--ink-2); padding-left: 22px; margin: 0 0 14px; }
+  li { margin: 4px 0; }
+  li::marker { color: var(--violet); }
+  hr { border: 0; border-top: 1px solid var(--line); margin: 28px 0; }
+  .mono { font-family: var(--font-mono); }
+  .mute { color: var(--mute); }
+  .cy { color: var(--cyan); } .mg { color: var(--magenta); } .vi { color: var(--violet); }
+
+  /* ---------- layout ---------- */
+  .shell { display: grid; grid-template-columns: var(--nav-w) minmax(0, 1fr); max-width: calc(var(--w) + var(--nav-w) + 96px); margin: 0 auto; padding: 0 32px 120px; gap: 48px; }
+  nav.toc {
+    position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+    padding: 36px 0 40px; font-size: 13.5px;
+    border-right: 1px solid var(--line);
+    scrollbar-width: thin;
+  }
+  nav.toc .brand { font-family: var(--font-display); color: #fff; font-size: 15px; letter-spacing: .04em; margin-bottom: 4px; display: block; }
+  nav.toc .brand small { display: block; color: var(--mute); font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; margin-top: 4px; }
+  nav.toc ol { list-style: none; padding: 0; margin: 26px 0 0; }
+  nav.toc li { margin: 0; }
+  nav.toc a { display: block; padding: 6px 14px 6px 12px; color: var(--mute); border-left: 2px solid transparent; margin-left: -1px; transition: color .15s, border-color .15s; }
+  nav.toc a:hover { color: var(--ink); text-decoration: none; }
+  nav.toc a.on { color: var(--cyan); border-left-color: var(--cyan); text-shadow: 0 0 12px rgba(34,224,255,.45); }
+  nav.toc .grp { color: var(--violet); font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; margin: 18px 0 4px 12px; }
+  main { min-width: 0; }
+  section { padding: 64px 0 8px; }
+  section + section { border-top: 1px solid var(--line); }
+  .kicker { font-family: var(--font-mono); color: var(--magenta); font-size: 12px; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 10px; }
+  .lead { font-size: 18px; color: var(--ink); max-width: 62ch; margin: 14px 0 20px; }
+  html.anim .reveal { opacity: 0; transform: translateY(14px); transition: opacity .6s ease, transform .6s ease; }
+  html.anim .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  /* ---------- hero ---------- */
+  header.hero {
+    position: relative; min-height: 88vh; display: flex; align-items: flex-end;
+    margin: 0 -32px; padding: 0 32px 56px;
+    /* closest-side: every glow reaches zero before it meets the hero's edge — no clipped band */
+    background: radial-gradient(closest-side at 72% 42%, rgba(138,92,255,.18), transparent),
+                radial-gradient(closest-side at 26% 66%, rgba(255,46,166,.09), transparent),
+                var(--bg-0);
+    overflow: hidden;
+  }
+  header.hero .art {
+    position: absolute; inset: 0; z-index: 0;
+    background: url("img/assembly-threequarter.png") no-repeat right 0 top 3% / auto 84%;
+  }
+  /* fade lives on the hero itself, not on .art — a filter on .art would tint the fade's solid end and print a rectangle */
+  header.hero::after { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: linear-gradient(180deg, transparent 62%, var(--bg-0) 100%); }
+  @keyframes heroIn { from { opacity: 0; transform: scale(1.03); } to { opacity: 1; transform: none; } }
+  header.hero .copy { position: relative; z-index: 1; max-width: 640px; }
+  header.hero .over { font-family: var(--font-mono); color: var(--cyan); font-size: 12.5px; letter-spacing: .22em; text-transform: uppercase; margin-bottom: 18px; }
+  header.hero .over::before { content: "◉ "; color: var(--magenta); }
+  header.hero h1 { font-size: clamp(40px, 5.4vw, 66px); color: #fff; letter-spacing: -.005em; text-shadow: 0 0 40px rgba(34,224,255,.18), 0 2px 18px rgba(6,3,16,.9); }
+  header.hero h1 em { font-style: normal; color: var(--magenta); text-shadow: 0 0 28px rgba(255,46,166,.55); }
+  header.hero p.sub { font-size: 19px; color: var(--ink-2); max-width: 52ch; margin: 18px 0 26px; }
+  header.hero .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  /* entrance motion is opt-in via html.anim (added by JS unless reduced-motion / ?noanim) */
+  html.anim header.hero .art { animation: heroIn 1.4s ease both; }
+  html.anim header.hero .over { animation: fadeUp .8s .2s ease both; }
+  html.anim header.hero h1 { animation: fadeUp .8s .35s ease both; }
+  html.anim header.hero p.sub { animation: fadeUp .8s .5s ease both; }
+  html.anim header.hero .chips { animation: fadeUp .8s .65s ease both; }
+  .chip { font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--ink-2); background: rgba(12,6,32,.6); backdrop-filter: blur(4px); }
+  .chip b { color: var(--cyan); font-weight: 600; }
+  .chip.hot { border-color: rgba(255,46,166,.45); } .chip.hot b { color: var(--magenta); }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px);} to { opacity: 1; transform: none; } }
+
+  /* ---------- tables ---------- */
+  table { width: 100%; border-collapse: collapse; margin: 14px 0 22px; font-size: 14.5px; }
+  th { text-align: left; font-family: var(--font-mono); font-weight: 500; font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--violet); padding: 8px 12px 10px; border-bottom: 1px solid var(--line); }
+  td { padding: 10px 12px; border-bottom: 1px solid rgba(138,92,255,.12); vertical-align: top; color: var(--ink-2); }
+  td:first-child { color: var(--ink); }
+  tr:hover td { background: rgba(34,224,255,.03); }
+  .tbl-wrap { overflow-x: auto; }
+  #repo td:first-child { width: 46%; overflow-wrap: anywhere; }
+  .tag { display: inline-block; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .1em; padding: 1px 7px; border-radius: 3px; vertical-align: middle; margin-left: 4px; }
+  .tag.ok { color: var(--cyan); border: 1px solid rgba(34,224,255,.4); }
+  .tag.prov { color: var(--coral); border: 1px solid rgba(255,107,122,.45); }
+  .tag.todo { color: var(--magenta); border: 1px solid rgba(255,46,166,.45); }
+
+  /* ---------- figures ---------- */
+  figure { margin: 22px 0 26px; }
+  figure img { display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); background: radial-gradient(80% 70% at 50% 45%, rgba(138,92,255,.10), var(--bg-1) 100%); }
+  figcaption { font-family: var(--font-mono); font-size: 12px; color: var(--mute); margin-top: 8px; letter-spacing: .04em; }
+  figcaption b { color: var(--ink-2); font-weight: 500; }
+  .fig2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .fig2 figure { margin: 0; }
+  .fig2 img { aspect-ratio: 4/3; object-fit: contain; }
+
+  /* ---------- state legend + live ring ---------- */
+  .ringdemo { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 34px; align-items: center; margin: 24px 0 10px; }
+  .ringdemo svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 0 22px rgba(34,224,255,.08)); }
+  .states { list-style: none; padding: 0; margin: 0; }
+  .states li { display: grid; grid-template-columns: 22px 1fr; gap: 12px; align-items: baseline; padding: 9px 12px; border-radius: 6px; margin: 0; cursor: pointer; border: 1px solid transparent; transition: background .15s, border-color .15s; }
+  .states li:hover { background: rgba(34,224,255,.04); }
+  .states li.on { border-color: var(--line-2); background: rgba(12,6,32,.9); }
+  .states .sw { width: 12px; height: 12px; border-radius: 50%; margin-top: 4px; box-shadow: 0 0 10px currentColor; }
+  .states b { color: #fff; font-family: var(--font-display); font-weight: 600; letter-spacing: .02em; }
+  .states .how { color: var(--mute); font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .06em; margin-left: 8px; }
+  .states span.d { display: block; color: var(--ink-2); font-size: 14px; }
+  .demo-cap { font-family: var(--font-mono); font-size: 12px; color: var(--mute); text-align: center; margin-top: 8px; letter-spacing: .04em; min-height: 1.4em; }
+  .demo-cap b { color: var(--cyan); font-weight: 500; }
+
+  /* ---------- flow diagram ---------- */
+  .flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 10px; align-items: center; margin: 22px 0 26px; font-family: var(--font-mono); font-size: 13px; }
+  .flow .box { border: 1px solid var(--line-2); border-radius: 8px; padding: 14px 16px; background: var(--bg-1); text-align: center; }
+  .flow .box b { display: block; color: #fff; font-family: var(--font-display); font-size: 16px; margin-bottom: 4px; letter-spacing: .02em; }
+  .flow .box span { color: var(--mute); font-size: 12px; }
+  .flow .arr { color: var(--magenta); font-size: 20px; text-align: center; }
+  .flow .arr small { display: block; color: var(--mute); font-size: 10.5px; letter-spacing: .1em; }
+
+  /* ---------- steps ---------- */
+  ol.steps { list-style: none; padding: 0; margin: 20px 0; counter-reset: s; }
+  ol.steps > li { counter-increment: s; display: grid; grid-template-columns: 56px minmax(0,1fr); gap: 0 16px; padding: 18px 0; border-top: 1px solid rgba(138,92,255,.14); margin: 0; }
+  ol.steps > li:last-child { border-bottom: 1px solid rgba(138,92,255,.14); }
+  ol.steps > li > * { grid-column: 2; }
+  ol.steps > li::before { grid-column: 1; grid-row: 1; content: counter(s, decimal-leading-zero); font-family: var(--font-mono); font-size: 22px; color: var(--magenta); line-height: 1.1; text-shadow: 0 0 14px rgba(255,46,166,.35); transition: text-shadow .2s, color .2s; }
+  ol.steps > li:hover::before { color: #fff; text-shadow: 0 0 18px var(--magenta), 0 0 3px var(--magenta); }
+  ol.steps h4 { font-size: 17px; color: #fff; margin: 0 0 6px; }
+  ol.steps p { margin: 0 0 8px; }
+  ol.steps p:last-child, ol.steps ul:last-child { margin-bottom: 0; }
+  ol.steps ul { margin: 6px 0 0; }
+  .check { color: var(--cyan); font-family: var(--font-mono); font-size: 12.5px; letter-spacing: .04em; margin-top: 8px; display: block; }
+  .check::before { content: "✓ check  "; color: var(--magenta); }
+
+  /* ---------- insert maps ---------- */
+  .maps { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0 8px; }
+  .maps figure { margin: 0; }
+  .map { position: relative; display: block; }
+  .map img { display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); background: radial-gradient(80% 70% at 50% 45%, rgba(138,92,255,.10), var(--bg-1) 100%); }
+  .map .pin { --c: #fff; position: absolute; transform: translate(-50%, -50%); width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 600 11.5px/1 var(--font-mono); font-style: normal; color: #06030f; background: var(--c); border: 2px solid rgba(6,3,15,.7); box-shadow: 0 0 0 1.5px rgba(255,255,255,.35), 0 0 12px var(--c); pointer-events: none; }
+  .map .pin.A { --c: #22E0FF; }
+  .map .pin.B { --c: #FF2EA6; }
+  .map .pin.C { --c: #FFA43D; }
+  .map .pin.D { --c: #39FF88; }
+  .map .pin.P { --c: #A98CFF; width: 18px; height: 18px; font-size: 10px; }
+  .legend { list-style: none; padding: 0; margin: 12px 0 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 28px; }
+  .legend li { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; margin: 0; font-size: 14.5px; }
+  .legend .k { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 600 11.5px/1 var(--font-mono); color: #06030f; margin-top: 2px; }
+  .legend .k.A { background: #22E0FF; } .legend .k.B { background: #FF2EA6; } .legend .k.C { background: #FFA43D; } .legend .k.D { background: #39FF88; } .legend .k.P { background: #A98CFF; }
+  .legend b { color: #fff; }
+  .legend .w { display: block; color: var(--mute); font-family: var(--font-mono); font-size: 12px; letter-spacing: .03em; }
+
+  /* ---------- wiring ---------- */
+  .wiregrid { display: grid; grid-template-columns: minmax(0,1fr) 250px; gap: 14px; align-items: stretch; margin: 14px 0 16px; }
+  .wiregrid .wiring { margin: 0; }
+  .wirephoto { margin: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--bg-1); padding: 10px 10px 8px; display: flex; flex-direction: column; }
+  .wirephoto img { width: 100%; height: auto; border-radius: 5px; display: block; }
+  .wirephoto figcaption { font-family: var(--font-mono); font-size: 11.5px; color: var(--mute); margin-top: 8px; line-height: 1.5; }
+  .wirephoto figcaption b { color: var(--ink-2); }
+  .wiring { border: 1px solid var(--line); border-radius: 8px; background: radial-gradient(70% 80% at 50% 50%, rgba(138,92,255,.08), var(--bg-1) 100%); padding: 12px 8px 4px; margin: 14px 0 16px; overflow-x: auto; }
+  .wiring svg { display: block; width: 100%; max-width: 780px; height: auto; margin: 0 auto; }
+
+  .puckphoto { grid-column: 1 / -1; margin: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--bg-1); padding: 12px; display: grid; grid-template-columns: minmax(0,500px) 1fr; gap: 18px; align-items: center; }
+  .puckphoto img { width: 100%; height: auto; border-radius: 6px; display: block; }
+  .puckphoto figcaption { font-family: var(--font-mono); font-size: 12px; color: var(--mute); line-height: 1.7; }
+
+  /* ---------- build photos ---------- */
+  .buildgrid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 18px; align-items: start; margin: 22px 0 8px; }
+  .buildgrid figure { margin: 0; }
+  .buildgrid img { display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); }
+  .buildgrid figcaption { font-family: var(--font-mono); font-size: 12px; color: var(--mute); margin-top: 8px; letter-spacing: .04em; }
+  .buildgrid figcaption b { color: var(--ink-2); }
+
+  /* ---------- callouts + grids ---------- */
+  .note { border-left: 2px solid var(--magenta); background: rgba(255,46,166,.05); padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 16px 0 20px; color: var(--ink-2); }
+  .note.cy { border-left-color: var(--cyan); background: rgba(34,224,255,.05); }
+  .note b { color: #fff; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 40px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 18px 0 8px; }
+  .stat { border-top: 1px solid var(--line); padding: 12px 0 4px; }
+  .stat b { display: block; font-family: var(--font-display); font-size: 28px; color: #fff; letter-spacing: -.01em; }
+  .stat b i { font-style: normal; color: var(--cyan); }
+  .stat span { font-family: var(--font-mono); font-size: 11.5px; color: var(--mute); letter-spacing: .1em; text-transform: uppercase; }
+  .status-list li { padding: 3px 0; }
+  footer { margin-top: 70px; padding-top: 24px; border-top: 1px solid var(--line); font-family: var(--font-mono); font-size: 12px; color: var(--mute); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+
+  @media (max-width: 980px) {
+    .shell { grid-template-columns: 1fr; gap: 0; padding: 0 20px 80px; }
+    nav.toc { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); padding: 20px 0 10px; }
+    nav.toc ol { display: flex; flex-wrap: wrap; gap: 2px 4px; margin-top: 12px; }
+    nav.toc .grp { display: none; }
+    nav.toc a { border-left: 0; padding: 4px 8px; }
+    header.hero { margin: 0 -20px; padding: 0 20px 40px; min-height: 70vh; }
+    header.hero .art { background-position: center 10%; background-size: 130% auto; opacity: .55; mask-image: linear-gradient(0deg, transparent 10%, #000 60%); -webkit-mask-image: linear-gradient(0deg, transparent 10%, #000 60%); }
+    .ringdemo, .fig2, .grid2, .maps, .legend, .wiregrid { grid-template-columns: 1fr; }
+    .buildgrid { grid-template-columns: 1fr; }
+    .puckphoto { grid-template-columns: 1fr; }
+    .grid3 { grid-template-columns: 1fr 1fr; }
+    .flow { grid-template-columns: 1fr; }
+    .flow .arr { transform: rotate(90deg); }
+    ol.steps > li { grid-template-columns: 44px 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<nav class="toc" aria-label="Contents">
+  <a class="brand" href="#top">Stargate Agent Monitor<small>project writeup</small></a>
+  <ol>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#states">What the ring says</a></li>
+    <li><a href="#how">How it works</a></li>
+    <li class="grp">Build</li>
+    <li><a href="#bom">Materials</a></li>
+    <li><a href="#enclosure">The enclosure</a></li>
+    <li><a href="#printing">Printing</a></li>
+    <li><a href="#assembly">Assembly</a></li>
+    <li><a href="#inserts" style="padding-left:24px">↳ insert map</a></li>
+    <li><a href="#firmware">Firmware &amp; hooks</a></li>
+    <li><a href="#wiring" style="padding-left:24px">↳ wiring</a></li>
+    <li class="grp">Engineering</li>
+    <li><a href="#verify">Verification gates</a></li>
+    <li><a href="#build">First light</a></li>
+    <li><a href="#status">Status &amp; open items</a></li>
+    <li><a href="#repo">Repo map</a></li>
+  </ol>
+</nav>
+
+<main id="top">
+
+<header class="hero">
+  <div class="art" role="img" aria-label="Three-quarter render of the assembled Stargate enclosure on its SGC dock"></div>
+  <div class="copy">
+    <div class="over">ESP32-S3 · WS2812B · Arduino / MicroPython · OpenSCAD</div>
+    <h1>Stargate <em>Agent</em> Monitor</h1>
+    <p class="sub">A miniature Stargate that shows, at a glance from across the room, which of your Claude Code sessions are working — and which are stopped, waiting on you. Other agents (Codex and friends) are planned.</p>
+    <div class="chips">
+      <span class="chip">firmware <b>running on the gate</b></span>
+      <span class="chip">build <b>v2 printed &amp; running</b></span>
+      <span class="chip hot">7 printable parts · <b>22 review rounds</b></span>
+      <span class="chip">repo <b><a href="https://github.com/Narcosia/stargate-agent-monitor">Narcosia/stargate-agent-monitor</a></b></span>
+      <span class="chip hot">STLs <b><a href="https://makerworld.com/en/models/3533985-stargate-agent-monitor-claude-code-status-light">on MakerWorld</a></b></span>
+    </div>
+  </div>
+</header>
+
+<!-- ============================================================ -->
+<section id="overview" class="reveal">
+  <div class="kicker">01 · Overview</div>
+  <h2>What this is</h2>
+  <p class="lead">Every live Claude Code session owns an arc of a 24-LED ring. Comets mean <em>leave it alone</em>; pulses mean <em>it wants you</em>. No wrapper script, no daemon, no USB tether — the ESP32 <strong>is</strong> the webhook endpoint.</p>
+  <figure style="max-width:400px;margin:22px auto 26px">
+    <video src="img/stargate-demo.mp4" poster="img/stargate-demo-poster.jpg" autoplay muted loop playsinline controls preload="metadata" style="width:100%;border-radius:10px;display:block"></video>
+    <figcaption><b>The finished build.</b> Six live sessions: two waiting for input, three working, one running background agents. Ring and screen both update straight from Claude Code's hooks.</figcaption>
+  </figure>
+  <p>Claude Code has a native <code>"type": "http"</code> hook that POSTs each event's JSON straight to a URL. The board runs a tiny MicroPython HTTP server on the LAN, reads only <code>session_id</code> and <code>hook_event_name</code> from each payload, keeps a session registry, and paints the ring at ~33 fps. Multiple machines can point at the same ring — session IDs are UUIDs, so they simply appear as more arcs.</p>
+  <p>The device then gets a home: a <strong>Stargate on an SGC-style dock</strong>. A round Waveshare ESP32-S3 AMOLED touchscreen is the gate's centre, the LED ring is the gate's illuminated inner track behind 24 individual windows over a frosted diffuser, and the whole gate floats above the pedestal so all 360° of LEDs stay visible — including 6 o'clock. Nine red chevrons, 39 glyphs, running-bond stonework on the pedestal. Fully parametric OpenSCAD, verified coupon-first.</p>
+  <div class="grid3">
+    <div class="stat"><b>24</b><span>LEDs · one window each</span></div>
+    <div class="stat"><b>~150 <i>mA</i></b><span>at default brightness · USB powered</span></div>
+    <div class="stat"><b>Ø110 <i>mm</i></b><span>gate · 135 × 75 × 30 dock</span></div>
+    <div class="stat"><b>7</b><span>printable parts (+4 coupons)</span></div>
+    <div class="stat"><b>14</b><span>M2 heat-set inserts</span></div>
+    <div class="stat"><b>0</b><span>glue in the load path</span></div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="states" class="reveal">
+  <div class="kicker">02 · The signal</div>
+  <h2>What the ring says</h2>
+  <p class="lead">Motion carries the same information as colour, independently — the ring stays readable in a glance too brief to register hue.</p>
+
+  <div class="ringdemo">
+    <div>
+      <svg id="ring" viewBox="0 0 300 300" aria-label="Live simulation of the ring's animation, ported from ring.py">
+        <defs>
+          <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur stdDeviation="4" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <circle cx="150" cy="150" r="118" fill="none" stroke="rgba(138,92,255,.18)" stroke-width="1"/>
+        <circle cx="150" cy="150" r="82" fill="none" stroke="rgba(138,92,255,.18)" stroke-width="1"/>
+        <circle cx="150" cy="150" r="70" fill="#0c0620" stroke="rgba(34,224,255,.15)" stroke-width="1"/>
+        <g id="leds"></g>
+      </svg>
+      <div class="demo-cap" id="demo-cap"></div>
+    </div>
+    <ul class="states" id="state-list">
+      <li data-state="working"><span class="sw" style="color:#00dcff;background:#00dcff"></span><div><b>working</b><span class="how">cyan · quick comet</span><span class="d">actively processing your turn</span></div></li>
+      <li data-state="background"><span class="sw" style="color:#783cff;background:#783cff"></span><div><b>background</b><span class="how">violet · slow comet</span><span class="d">agents running — wants nothing from you</span></div></li>
+      <li data-state="input"><span class="sw" style="color:#ff00a0;background:#ff00a0"></span><div><b>input</b><span class="how">hot pink · slow pulse</span><span class="d">turn finished — awaiting your next prompt</span></div></li>
+      <li data-state="attention"><span class="sw" style="color:#ff285a;background:#ff285a"></span><div><b>attention</b><span class="how">pink-red · fast pulse</span><span class="d">permission prompt or explicit request for input</span></div></li>
+      <li data-state="done"><span class="sw" style="color:#fff;background:#fff"></span><div><b>done</b><span class="how">white · fading out</span><span class="d">session ended</span></div></li>
+      <li data-state="idle"><span class="sw" style="color:#22E0FF;background:#0a3a48"></span><div><b>idle</b><span class="how">single dim pixel creeping</span><span class="d">no sessions — powered and connected</span></div></li>
+    </ul>
+  </div>
+  <p class="mute mono" style="font-size:12.5px">The simulation above is a direct port of <code>ring.py</code>'s render loop (default <code>vapor</code> theme): same comet/pulse maths, same per-arc antiphase stagger, same one-dark-LED separator between sessions. Click a state to hold it; leave it alone and it walks a realistic day.</p>
+
+  <h3>Themes</h3>
+  <p><code>THEME</code> in <code>config.py</code> picks a palette. Whatever the theme, one rule holds: states that want you are <strong>warm</strong>, states that don't are <strong>cool</strong>.</p>
+  <div class="tbl-wrap"><table>
+    <tr><th>Theme</th><th>working</th><th>background</th><th>input</th><th>attention</th><th>Notes</th></tr>
+    <tr><td><code>vapor</code> (default)</td><td>cyan</td><td>violet</td><td>hot pink</td><td>pink-red</td><td>prettiest, least legible — attention leans on its fast pulse</td></tr>
+    <tr><td><code>neon</code></td><td>cyan</td><td>spring green</td><td>hot pink</td><td>red</td><td>the compromise</td></tr>
+    <tr><td><code>classic</code></td><td>blue</td><td>green</td><td>amber</td><td>red</td><td>most legible, dullest</td></tr>
+  </table></div>
+  <p>A dict overrides individual states, merged over <code>classic</code>: <code>THEME = {"input": (255, 0, 200)}</code>. An unknown theme name logs a warning and falls back — a typo in config should dim the lights, not take an unattended device's HTTP server down on boot.</p>
+  <p>With two sessions each gets half the ring; three, a third. Arcs are ordered by first-seen so an arc never jumps position while you're looking at it. Neighbouring arcs get a dark separator LED and are staggered in antiphase so two pink arcs don't breathe as one.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="how" class="reveal">
+  <div class="kicker">03 · Mechanism</div>
+  <h2>How it works</h2>
+
+  <div class="flow">
+    <div class="box"><b>Claude Code</b><span>hooks · settings.json</span></div>
+    <div class="arr">→<small>HTTP POST /hook</small></div>
+    <div class="box"><b>ESP32</b><span>MicroPython · uasyncio</span></div>
+    <div class="arr">→<small>GPIO13 · 800 kHz</small></div>
+    <div class="box"><b>WS2812B ×24</b><span>arcs · comets · pulses</span></div>
+  </div>
+
+  <h3>Events consumed</h3>
+  <div class="tbl-wrap"><table>
+    <tr><th>Hook event</th><th>Effect</th></tr>
+    <tr><td><code>SessionStart</code>, <code>UserPromptSubmit</code></td><td>working (and resets the pending counter + background window)</td></tr>
+    <tr><td><code>Stop</code></td><td>input</td></tr>
+    <tr><td><code>Notification</code> · <code>permission_prompt</code>, <code>agent_needs_input</code>, <code>elicitation_dialog</code></td><td>attention</td></tr>
+    <tr><td><code>Notification</code> · <code>idle_prompt</code>, <code>agent_completed</code></td><td>input</td></tr>
+    <tr><td><code>SessionEnd</code></td><td>done</td></tr>
+    <tr><td><code>SubagentStart</code>, <code>TaskCreated</code> / <code>SubagentStop</code>, <code>TaskCompleted</code></td><td>pending ±1 <em>and</em> refresh the background window</td></tr>
+  </table></div>
+
+  <h3>Background work vs. waiting on you</h3>
+  <p>A session that spawns background agents stops emitting foreground events — from outside that looks identical to a session sitting idle. Two mechanisms stop the ring crying wolf:</p>
+  <ul>
+    <li><strong><code>idle_prompt</code> is not red.</strong> It means "quiet a while", which is exactly what background work looks like. Red is reserved for notifications that genuinely block.</li>
+    <li><strong>A recency window, not a counter.</strong> In the field <code>SubagentStart</code> was observed firing <em>once against eleven</em> <code>SubagentStop</code>s. So <em>any</em> background event refreshes a <code>BACKGROUND_HOLD_MS</code> window (90 s); a stream of stops is itself evidence agents are running. Cleared on <code>UserPromptSubmit</code>. <code>attention</code> overrides the window entirely.</li>
+  </ul>
+  <p>Known imperfection: if a turn's background work finishes and you don't reply, the arc stays violet for up to 90 s before falling back to pink.</p>
+
+  <h3>Reliability &amp; privacy</h3>
+  <div class="grid2">
+    <div>
+      <ul>
+        <li><strong>Ring off:</strong> connections refused instantly; Claude Code treats that as non-blocking. Hooks use <code>timeout: 5</code>, not the 600 s default.</li>
+        <li><strong>Sessions that die silently:</strong> <code>working</code> expires after 1 h (a real one fires <code>Stop</code> eventually); <code>input</code>/<code>attention</code> after 4 h — that's the state worth showing. Unknown IDs re-register on arrival, so over-eager pruning is cheap.</li>
+        <li><strong>WiFi drops:</strong> re-associated every 30 s. <strong>Reboot mid-session:</strong> repopulates on the next event.</li>
+      </ul>
+    </div>
+    <div>
+      <ul>
+        <li><code>/hook</code> always answers <strong>200 with an empty body</strong> — a 2xx <em>with</em> text would be fed back into your conversation as context.</li>
+        <li>Payloads carry prompt text, <code>cwd</code>, transcript paths. <strong>Only <code>session_id</code> and <code>hook_event_name</code> are ever read; nothing is stored or logged.</strong></li>
+        <li>Plaintext on the LAN; <code>TOKEN</code> is a light guard, not security. <strong>Never port-forward it.</strong> Off-LAN machines go via Tailscale/VPN.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Endpoints</h3>
+  <div class="tbl-wrap"><table>
+    <tr><th>Method</th><th>Path</th><th>Purpose</th></tr>
+    <tr><td><code>POST</code></td><td><code>/hook</code></td><td>hook payload from Claude Code</td></tr>
+    <tr><td><code>GET</code></td><td><code>/</code></td><td>session states as JSON — <code>state</code>, <code>raw_state</code>, <code>pending</code>, <code>expires_in_ms</code></td></tr>
+    <tr><td><code>GET</code></td><td><code>/health</code></td><td>liveness</td></tr>
+    <tr><td><code>GET</code></td><td><code>/events</code></td><td>last 40 events (metadata only) — trace a surprising colour to its cause</td></tr>
+    <tr><td><code>POST</code></td><td><code>/clear</code></td><td>forget all sessions</td></tr>
+  </table></div>
+</section>
+
+<!-- ============================================================ -->
+<section id="bom" class="reveal">
+  <div class="kicker">04 · Bill of materials</div>
+  <h2>Materials</h2>
+  <p class="lead">Two boards appear here on purpose. The Stargate is built around the Waveshare round-screen puck, which runs the <code>console/</code> firmware and drives the ring from its rear header. The Keyestudio WROOM is only for the original ring-only build (MicroPython, repo root) and isn't needed for the Stargate.</p>
+
+  <h3>Electronics</h3>
+  <div class="tbl-wrap"><table>
+    <tr><th>Item</th><th>Spec</th><th>Role</th></tr>
+    <tr><td>Waveshare ESP32-S3-Touch-AMOLED-1.75-B</td><td>SKU 31262 · Ø51.00 × 12.10 mm cased · Ø43.76 touch area · side USB-C · rear 8-pin 2.54 mm female header · MX1.25 speaker + battery · PMU</td><td>The gate's centre and the brain (<code>console/</code> firmware)</td></tr>
+    <tr><td>Keyestudio ESP32-WROOM-32E</td><td>MicroPython <code>ESP32_GENERIC</code></td><td>Optional: the original ring-only build, <code>main.py</code>/<code>ring.py</code> (<code>GPIO13</code>)</td></tr>
+    <tr><td>WS2812B ring, 24 LED</td><td>Jaycar XC4385 · OD 72 / ID 60 / 7 wide · 3.5 mm PCB+LED stack · flying leads exit sideways, in-plane</td><td>The gate's inner track <span class="tag ok">measured</span></td></tr>
+    <tr><td>USB-C extension, right-angle M→F</td><td>0.3 m</td><td>Puck port → base rear-wall port; keeps cable tugs off the puck's soldered connector and lets the gate lift off the base</td></tr>
+    <tr><td>5 V USB supply + cable</td><td>≥ 500 mA</td><td>Whole ring ≈ 150 mA at <code>BRIGHTNESS = 24</code> (~9 %). Full white would be ~1.4 A — don't raise brightness on USB power</td></tr>
+    <tr><td>Hook-up wire ×3</td><td>~15 cm, to 2.54 mm header</td><td>5V, GND, Din from the puck's rear header (or the WROOM's pins) to the ring's leads</td></tr>
+    <tr><td>1N5822 Schottky diode + 330 Ω 0.5 W resistor</td><td>axial, one each</td><td>In-line signal conditioning: diode in the 5 V lead (stripe toward the ring), resistor in the data lead at the ring end — see <a href="#wiring">wiring</a></td></tr>
+  </table></div>
+
+  <h3>Fasteners &amp; small parts</h3>
+  <div class="tbl-wrap"><table>
+    <tr><th>Item</th><th>Qty</th><th>Where</th></tr>
+    <tr><td>M2 heat-set inserts, brass, OD 3.2 × L3–4 (5 mm deep bosses)</td><td>14</td><td>gate_rear front face ×4 (front plate) · gate_rear back face ×4 (rear cover) + ×2 (pillar retention) · base_main ×4 (bottom cover). <span class="tag ok">coupon A</span></td></tr>
+    <tr><td>M2 × 8 pan-head screws</td><td>4</td><td>group A: gate_front → gate_rear, at 45/135/225/315°. 4.0 mm under the counterbore + 4 into the insert — <a href="#inserts">stack-ups</a> <span class="tag prov">confirm</span></td></tr>
+    <tr><td>M2 × 10 countersunk screws</td><td>4</td><td>group B: rear_cover → gate_rear at r 40, angles 30/150/225/315° (v2; asymmetric — only fits one way). CSK 4.4 × 1.2; the shank crosses the cover's 4.2 mm cavity <span class="tag prov">confirm</span></td></tr>
+    <tr><td>M2 × 20 pan-head screws</td><td>2</td><td>group C: through each rear pillar (10 mm), the cover floor and cavity (6 mm), into gate_rear's back-face inserts — the gate's only retention <span class="tag prov">confirm</span></td></tr>
+    <tr><td>M2 × 6 pan-head screws</td><td>4</td><td>group D: base_bottom (2 mm plate) → base_main shelf inserts</td></tr>
+    <tr><td>1.75 mm filament offcuts</td><td>19</td><td>18 chevron pins (Ø2 × 2.5, two per chevron) + 1 registration pin (Ø2 × 3, gate_rear front @ 95°). CA glue</td></tr>
+    <tr><td>Rubber feet</td><td>4</td><td>recesses in base_bottom</td></tr>
+  </table></div>
+
+  <h3>Filament</h3>
+  <div class="tbl-wrap"><table>
+    <tr><th>Colour</th><th>Material</th><th>Parts</th></tr>
+    <tr><td>Grey (<code>#6E6E6E</code>-ish)</td><td>PLA+ or PETG</td><td>gate_front face, gate_rear, rear_cover</td></tr>
+    <tr><td>Black</td><td>same, via AMS</td><td>glyph "ink" — the bottom 0.5 mm of each 0.7 mm engraving, printed as a second solid</td></tr>
+    <tr><td>Dark grey</td><td>PLA+ or PETG</td><td>base_main, base_bottom</td></tr>
+    <tr><td>Red</td><td>PLA+</td><td>chevron ×9</td></tr>
+    <tr><td>Translucent / natural</td><td>PETG</td><td>diffuser — frosted after printing with 400–600 grit</td></tr>
+  </table></div>
+
+  <h3>Tools</h3>
+  <ul>
+    <li>Bambu H2D (or any 0.4 mm FDM); AMS or a second nozzle for the two-colour front, otherwise the single-colour fallback STL</li>
+    <li>Soldering iron with a heat-set insert tip; hex/Phillips driver for M2</li>
+    <li>Calipers — every dimension in <code>config.scad</code> is marked <code>CONFIRMED</code> or <code>PROVISIONAL</code>, and provisional ones get measured before the next print</li>
+    <li>400–600 grit paper (diffuser frost), side cutters (filament pins), CA glue</li>
+    <li>Software: OpenSCAD 2021.01 + BOSL2, Python 3 (trimesh, manifold3d for the mesh gates), Bambu Studio, <code>esptool</code>, <code>mpremote</code></li>
+  </ul>
+</section>
+
+<!-- ============================================================ -->
+<section id="enclosure" class="reveal">
+  <div class="kicker">05 · Enclosure</div>
+  <h2>The Stargate</h2>
+  <p class="lead">Layered front, centre out: screen → inner bezel → 24-window LED track over a continuous diffuser → glyph track → outer mechanical ring → nine chevrons. Behind it, a structural shell and a dish; below it, an SGC dock that carries the gate from underneath and behind so nothing crosses the ring.</p>
+
+  <figure>
+    <img src="img/assembly-exploded.png" alt="Exploded render: chevrons, gate front, diffuser, LED ring, screen puck, gate rear, rear cover, and the pedestal below">
+    <figcaption><b>Exploded stack, front to back.</b> Chevrons → gate_front → diffuser → LED ring → screen puck → gate_rear → rear_cover. The pedestal's two rear pillars and two cradle lugs are all that touch the gate. <span class="mute">(placeholder colours: green = puck, red = ring; enclosure/exploded_view.scad)</span></figcaption>
+  </figure>
+
+  <h3>Parts</h3>
+  <div class="tbl-wrap"><table>
+    <tr><th>Part</th><th>Role</th><th>Key geometry</th></tr>
+    <tr><td><code>gate_front</code></td><td>Decorative face + retaining bezel</td><td>Ø110 × 6. Screen opening Ø49.75 (bears on the puck's case rim, never the glass); 24 windows at 15° pitch, mullions on the dark gaps between LEDs; engraved 39-glyph band; raised outer ring; 36 rim grooves; 18 chevron pin holes; 4 M2 counterbores; 1 registration pin hole @ 85°</td></tr>
+    <tr><td><code>gate_rear</code></td><td>Structural shell — everything mounts to it</td><td>Ø110 × 14. Screen pocket Ø51.5 × 13.2 with three 0.2 mm crush ribs on the floor + two wall reliefs for the puck's side buttons (11 &amp; 1 o'clock); LED pocket OD 74 / ID 58 / 4.3 deep; 14 mm lead through-slot at 3 o'clock; header cavity; USB tunnel 16 × 10 at 6 o'clock — the only rim opening; 10 heat-set bosses; recessed registration groove on the back; rim brick grooves phase-locked to the front and cover</td></tr>
+    <tr><td><code>diffuser</code></td><td>Hides the raw PCB, spreads each LED into its window</td><td>OD ~73 / ID ~59.5 / 1.0 mm translucent PETG, frosted; sits 0.2 mm proud of the pocket so the front plate preloads it</td></tr>
+    <tr><td><code>rear_cover</code></td><td>Sealed dish over the wire zone</td><td>Ø110 × 6, 1.8 walls; 4× M2 countersunk; a plain 1.3 mm registration lip on an internal 45° shoulder drops into gate_rear's groove — self-centres, and skips the USB arc so it can only go on one way; same 36-groove brickwork as the other two so the 26 mm stack reads as one drum. v2: six internal Ø6 guide bosses — at the four cover screws and both pillar pass-throughs — continue the screw bores across the dish's open interior: no screw can wander off its hidden insert, and heads clamp a 5.7 mm column instead of the bare 1.8 mm floor (tips 0.3 clear of gate_rear, so seating stays lip-defined)</td></tr>
+    <tr><td><code>chevron</code> ×9</td><td>The Stargate's chevrons</td><td>Pin-on with two Ø2 filament pins each at 40° pitch, one at 6 o'clock on the dock's centreline (v2, 2026-08-20 — was 12); body bridges the two front screws that sit 5° off the chevron centrelines</td></tr>
+    <tr><td><code>base_main</code></td><td>SGC dock</td><td>135 × 75 × 30 four-sided planar-taper pedestal, top deck sloping 8 mm rear→front; two cradle lugs at ±30° off bottom (concave-cut to the ring's radius, 0.25 mm running clearance); two rear pillars with straight M2 bores; two cosmetic buttress flanks hard-cut Ø114 clear of the ring; internal cavity, USB drop slot, 16 × 14 × 12 rear-wall cable port; running-bond stone courses wrapping all four corners, ramp treads, panel lines. v2 styling pass: no bottom plinth lip (the wall runs straight to the bed), deck brickwork extended to the side arrises and over them to meet the wall courses, and the flanks coursed on their front/rear faces as well as the cap</td></tr>
+    <tr><td><code>base_bottom</code></td><td>Pedestal floor</td><td>4× M2 into inserts; rubber-feet recesses</td></tr>
+  </table></div>
+
+  <div class="fig2">
+    <figure><img src="img/assembly-front.png" alt="Straight-on front render of the gate on its dock"><figcaption><b>Front.</b> All 24 windows clear of the dock — the 360° visibility rule is a <code>tests.scad</code> assert, not a hope.</figcaption></figure>
+    <figure><img src="img/assembly-rear.png" alt="Rear three-quarter render showing the rear cover, two pillars with screw bores, and the rear-wall cable port"><figcaption><b>Rear.</b> Two pillars carry 2× M2 straight through the cover into gate_rear — the only retention. Cable exits the rear-wall port.</figcaption></figure>
+  </div>
+  <div class="fig2" style="margin-top:18px">
+    <figure><img src="img/gate-front-ams.png" alt="Top-down render of the two-colour gate front: grey face with black glyph ink"><figcaption><b>gate_front_ams.3mf.</b> Face + glyph ink as two pre-coloured objects; the tool change happens over 2–3 layers near z 5.3–5.8, not a full-height swap.</figcaption></figure>
+    <figure><img src="img/gate-stack-edge.png" alt="Edge-on render of the assembled gate stack showing continuous rim grooves across front, rear and cover"><figcaption><b>Stack edge.</b> One shared <code>rim_grooves()</code> module in <code>decor.scad</code> — front, rear and cover can't drift out of phase.</figcaption></figure>
+  </div>
+
+  <h3>Decisions that shaped it</h3>
+  <p>The full ledger (22 numbered decisions, with the <em>why</em>) is <code>enclosure/DESIGN.md</code>. The ones that matter if you're modifying it:</p>
+  <ul>
+    <li><strong>Gate floats; the dock never crosses the ring.</strong> Carried from below (two cradle lugs) and behind (two pillars). Buttresses, tabs, sockets and a rear spine were all designed, rendered, and deleted once they crowded the 4/8 o'clock chevrons or turned out vestigial.</li>
+    <li><strong>Puck clocked USB-down.</strong> The screen image rotates in software, so the port drops invisibly into the base; the side buttons land at 11 &amp; 1 behind the bezel with wall reliefs, no access slot.</li>
+    <li><strong>Crush ribs, not a retainer plate.</strong> Bezel↔floor already captures the puck; three ribs kill the 0.7 mm rattle. Nothing bears on glass.</li>
+    <li><strong>Leads exit sideways at 3 o'clock</strong> (the header side, shortest loop) — the brief's "15 mm below" was radial, not a droop. This shifts the firmware's LED origin by 6 <span class="tag todo">firmware</span>.</li>
+    <li><strong>Registration by lip-in-groove + one off-grid pin.</strong> The front plate's 4-fold screw pattern doesn't lock rotation on its own; a Ø2 filament pin at 95° does. The cover's own asymmetric screw set already does.</li>
+    <li><strong>Everything decorative is recessed</strong> (flat-print rule) and every relief cut is scoped inside its own part's <code>difference()</code> — after a flank relief silently gutted the cradle floor from 2.71 to 0.70 mm without any gate noticing.</li>
+    <li><strong>Donor STLs are reference only.</strong> The 220 mm German lamp model informed the look; every millimetre here is parametric and printable at 110 mm.</li>
+  </ul>
+</section>
+
+<!-- ============================================================ -->
+<section id="printing" class="reveal">
+  <div class="kicker">06 · Print guide</div>
+  <h2>Printing</h2>
+  <div class="note cy"><b>Just want to print it?</b> Ready-to-print STLs and Bambu Studio print profiles (H2D, two-colour AMS front) are on <a href="https://makerworld.com/en/models/3533985-stargate-agent-monitor-claude-code-status-light">MakerWorld</a>. The rest of this section is for regenerating them from the OpenSCAD source.</div>
+  <p>Files come out of <code>enclosure/render.ps1</code> into <code>enclosure/print/</code> (git-ignored, regenerated every run — nothing hand-edited). Regenerate rather than trusting a stale STL:</p>
+<pre><code><span class="c"># one-time</span>
+winget install --id OpenSCAD.OpenSCAD
+git clone --depth 1 https://github.com/BelfrySCAD/BOSL2.git enclosure/libs/BOSL2
+<span class="c"># every time — checks .echo for ERROR, exports binary STL, counts shells, runs the mesh gates</span>
+cd enclosure; ./render.ps1</code></pre>
+
+  <h3>Settings</h3>
+  <div class="tbl-wrap"><table>
+    <tr><th>Setting</th><th>Value</th></tr>
+    <tr><td>Nozzle / layers</td><td>0.4 mm · 0.16–0.20 mm (0.20 used for the coupons and gates)</td></tr>
+    <tr><td>Walls / infill</td><td>3–4 walls · 15–20 %</td></tr>
+    <tr><td>Diffuser</td><td>translucent PETG · 2–3 walls · low infill · frost one face with 400–600 grit after printing</td></tr>
+    <tr><td>Supports</td><td>None by design — an overhang gate (<code>tools/overhang_check.py</code>, FDM 45° rule, ≤ 2.5 mm reach) is part of the pipeline</td></tr>
+    <tr><td>Tolerances baked in</td><td><code>FIT = 0.25</code>, <code>CLEAR = 0.15</code> — proven on an earlier build's coupons for the same printer/material, then re-couponed here</td></tr>
+  </table></div>
+
+  <h3>Print list &amp; orientation</h3>
+  <div class="tbl-wrap"><table>
+    <tr><th>File</th><th>Qty</th><th>Orientation (as exported)</th><th>Notes</th></tr>
+    <tr><td><code>gate_front_ams.3mf</code></td><td>1</td><td>face-up</td><td>Bambu Studio → File → Import; lands as one object with 2 pre-coloured parts (face grey, glyphs black); right-click each part → Change Filament to map AMS slots. No AMS? print <code>gate_front.stl</code> single-colour, or import <code>gate_front_face.stl</code> + <code>gate_front_glyphs.stl</code> as one multi-part object</td></tr>
+    <tr><td><code>gate_rear.stl</code></td><td>1</td><td>face-down (back on top)</td><td>the reason the cover's registration lip is on the cover, not proud on this face</td></tr>
+    <tr><td><code>rear_cover.stl</code></td><td>1</td><td>floor down, opening up</td><td>the lip is the printable top edge of its own print</td></tr>
+    <tr><td><code>diffuser.stl</code></td><td>1</td><td>flat</td><td>translucent PETG</td></tr>
+    <tr><td><code>chevron.stl</code></td><td>9</td><td>as exported</td><td>red</td></tr>
+    <tr><td><code>base_main.stl</code></td><td>1</td><td>upright</td><td>the big one; feet inside the tapered walls (a 5 mm cantilever under the flank feet was caught by the overhang gate and fixed)</td></tr>
+    <tr><td><code>base_bottom.stl</code></td><td>1</td><td>flat</td><td></td></tr>
+  </table></div>
+
+  <div class="note cy"><b>Coupons first.</b> No full shell prints while anything is still <code>PROVISIONAL</code>. Coupon A (screen pocket, bezel, M2 boss, crush ribs), B (window/diffuser wedge lit with the real ring), C (annular LED pocket + lead slot), and D (cover-lip/rear-groove mating fit) have all been printed and <strong>passed</strong>. Every body sits at z = 0 with 0.6 mm mouse-ear tabs — a centred body straddling z = 0 made the slicer float an entire plate, twice.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="assembly" class="reveal">
+  <div class="kicker">07 · Assembly</div>
+  <h2>Assembly</h2>
+  <p class="lead">Screws and pins only — no glue in any load path; the gate lifts off the base with two screws. Build the gate stack front-to-back on the bench, then seat it on the dock.</p>
+
+  <h3 id="inserts">Where the inserts go</h3>
+  <p>All fourteen heat-sets are the same part — M2 insert in a Ø3.2 × 5 mm boss — but they live in four groups on three faces, and each group takes a different screw. The maps below stand a colour-coded marker on every hole (rendered from the same <code>config.scad</code> constants the parts use, so they can't drift); the filament pins are marked too since they go in at the same stage.</p>
+  <ul class="legend">
+    <li><span class="k A">A</span><div><b>Front-plate inserts ×4</b> — <code>gate_rear</code> <em>front</em> face, r 49 @ 45/135/225/315°. Take <b>4× M2 × 8 pan-head</b> down through <code>gate_front</code>'s counterbores.<span class="w">set from the front face · screws come from the front · 4.0 mm plate under the head + 4 into the insert</span></div></li>
+    <li><span class="k B">B</span><div><b>Rear-cover inserts ×4</b> — <code>gate_rear</code> <em>back</em> face, r 40 @ 30/150/225/315° (v2 angles; asymmetric on purpose). Take <b>4× M2 × 10 countersunk</b> through <code>rear_cover</code>.<span class="w">set from the back face · screws come from behind · 1.8 floor + 4.2 cover cavity + 4 into the insert</span></div></li>
+    <li><span class="k C">C</span><div><b>Pillar-retention inserts ×2</b> — <code>gate_rear</code> <em>back</em> face, r 45 @ 245/295°, just outboard of the lower B pair. Take <b>2× M2 × 20 pan-head</b> driven from behind through each rear pillar and the cover's pass-through — the gate's only retention.<span class="w">set from the back face · at the pillar angles 245/295°, 20° from the relocated B holes · 10 pillar + 0.25 gap + 1.8 floor + 4.2 cavity + 3.75 into the insert</span></div></li>
+    <li><span class="k D">D</span><div><b>Bottom-cover inserts ×4</b> — <code>base_main</code>, up into the 5 mm shelf around the cavity at (±50, ±22) mm. Take <b>4× M2 × 6 pan-head</b> up through <code>base_bottom</code>.<span class="w">set from underneath, base upside down · 2 mm plate + 4 into the insert</span></div></li>
+    <li><span class="k P">P</span><div><b>Filament pins (Ø2, glued)</b> — 1 registration pin in <code>gate_rear</code>'s front face @ 95° r 52 (3 mm deep); 18 chevron pins on <code>gate_front</code>'s outer ring, two per chevron at r 52 + 53 (2.5 mm deep).<span class="w">CA glue · not load-bearing</span></div></li>
+  </ul>
+
+  <h4 style="margin:18px 0 6px;font-size:15px;color:#fff">Screw lengths — derived from the CAD stack-ups</h4>
+  <p>Every boss is 5 mm deep, so a screw can carry at most 5 mm of thread past the mating face; these lengths aim for ~4 mm and are all within 1 mm of bottoming out — <strong>don't go up a size</strong>. Pan-head lengths are under-head; countersunk is overall. Derived from <code>config.scad</code>, not yet measured on printed parts <span class="tag prov">confirm</span>.</p>
+  <div class="tbl-wrap"><table>
+    <tr><th>Group</th><th>Screw</th><th>Qty</th><th>Stack under the head → into insert</th><th>Head sits</th></tr>
+    <tr><td><span class="k A" style="display:inline-grid;width:20px;height:20px;border-radius:50%;place-items:center;font:600 11px/1 var(--font-mono);color:#06030f;background:#22E0FF;vertical-align:middle;margin-right:6px">A</span>front plate → gate_rear</td><td><b>M2 × 8</b> pan</td><td>4</td><td>4.0 plate (7.5 mm at the outer ring − 3.5 counterbore) → 4.0 into insert</td><td>in the Ø4.5 counterbore, 2 mm below the outer ring's top</td></tr>
+    <tr><td><span class="k B" style="display:inline-grid;width:20px;height:20px;border-radius:50%;place-items:center;font:600 11px/1 var(--font-mono);color:#06030f;background:#FF2EA6;vertical-align:middle;margin-right:6px">B</span>rear cover → gate_rear</td><td><b>M2 × 10</b> countersunk</td><td>4</td><td>1.8 floor + 4.2 cover cavity → 4.0 into insert (10 overall incl. head). v2 covers: the cavity crossing runs inside a guide boss — same stack, same screw</td><td>flush in the Ø4.4 × 1.2 countersink on the cover's back</td></tr>
+    <tr><td><span class="k C" style="display:inline-grid;width:20px;height:20px;border-radius:50%;place-items:center;font:600 11px/1 var(--font-mono);color:#06030f;background:#FFA43D;vertical-align:middle;margin-right:6px">C</span>pillar → cover → gate_rear</td><td><b>M2 × 20</b> pan</td><td>2</td><td>10 pillar + 0.25 clearance + 1.8 cover floor + 4.2 cavity (guided by a boss on v2 covers) → 3.75 into insert</td><td>proud on the pillar's back (plain Ø2.4 bore, no counterbore)</td></tr>
+    <tr><td><span class="k D" style="display:inline-grid;width:20px;height:20px;border-radius:50%;place-items:center;font:600 11px/1 var(--font-mono);color:#06030f;background:#39FF88;vertical-align:middle;margin-right:6px">D</span>base_bottom → base_main</td><td><b>M2 × 6</b> pan</td><td>4</td><td>2.0 plate (flush in its 2 mm rebate) → 4.0 into insert</td><td>proud under the base; the rubber feet stand it clear</td></tr>
+  </table></div>
+  <p class="mute" style="font-size:13.5px">Inserts: 14× brass M2 heat-set, OD 3.2, length 3–4 mm (the 5 mm boss leaves 1 mm under a 4 mm insert). Shopping list: <b>4× M2×8 pan · 4× M2×10 CSK · 2× M2×20 pan · 4× M2×6 pan</b>. If you only have one pan length in the drawer, M2×8 works for A and can be cut down for D; C and B have no substitute.</p>
+
+  <div class="maps">
+    <figure>
+      <span class="map">
+        <img src="img/inserts-rear-front.png" alt="gate_rear front face with four cyan A markers on the front-plate insert holes and one violet P marker on the registration pin hole">
+        <i class="pin A" style="left:22.72%;top:66.64%">A</i>
+        <i class="pin A" style="left:26.49%;top:19.87%">A</i>
+        <i class="pin A" style="left:73.47%;top:19.86%">A</i>
+        <i class="pin A" style="left:77.23%;top:66.62%">A</i>
+        <i class="pin P" style="left:52.95%;top:10.21%">P</i>
+      </span>
+      <figcaption><b>gate_rear, front face</b> (as seen assembled: USB tunnel at 6, lead slot at 3). A ×4 in the outer field; P = the one registration pin, just right of 12.</figcaption>
+    </figure>
+    <figure>
+      <span class="map">
+        <img src="img/inserts-rear-back.png" alt="gate_rear back face with four magenta B markers on the rear-cover insert holes and two orange C markers on the pillar-retention insert holes">
+        <i class="pin B" style="left:25.79%;top:28.65%">B</i>
+        <i class="pin B" style="left:28.05%;top:61.72%">B</i>
+        <i class="pin B" style="left:71.91%;top:61.71%">B</i>
+        <i class="pin B" style="left:74.18%;top:28.64%">B</i>
+        <i class="pin C" style="left:34.8%;top:71.5%">C</i>
+        <i class="pin C" style="left:65.15%;top:71.5%">C</i>
+      </span>
+      <figcaption><b>gate_rear, back face</b> (from behind; USB tunnel at 6). B ×4 inside the registration groove at 30/150/225/315° (v2 — moved off the pillars); C ×2 at the pillar angles 245/295°.</figcaption>
+    </figure>
+    <figure>
+      <span class="map">
+        <img src="img/inserts-front-face.png" alt="gate_front face with cyan markers on the four counterbored screw holes and violet markers on the nine chevron pin-hole pairs">
+        <i class="pin A" style="left:22.99%;top:68.45%">A</i>
+        <i class="pin A" style="left:26.7%;top:21.87%">A</i>
+        <i class="pin A" style="left:73.27%;top:21.86%">A</i>
+        <i class="pin A" style="left:76.96%;top:68.47%">A</i>
+        <i class="pin P" style="left:11.95%;top:49.67%">P</i>
+        <i class="pin P" style="left:18.9%;top:26.82%">P</i>
+        <i class="pin P" style="left:23.37%;top:72.88%">P</i>
+        <i class="pin P" style="left:38.24%;top:13.61%">P</i>
+        <i class="pin P" style="left:49.97%;top:82.98%">P</i>
+        <i class="pin P" style="left:61.7%;top:13.61%">P</i>
+        <i class="pin P" style="left:76.57%;top:72.87%">P</i>
+        <i class="pin P" style="left:81.07%;top:26.85%">P</i>
+        <i class="pin P" style="left:88.02%;top:49.62%">P</i>
+      </span>
+      <figcaption><b>gate_front, face</b>. No inserts here — the A markers are the counterbored pass-throughs whose screws land in group A behind; P ×9 pairs are the chevron pin holes on the outer ring (one pair per chevron — v2 clocking, one at 6 o'clock).</figcaption>
+    </figure>
+    <figure>
+      <span class="map">
+        <img src="img/inserts-base-under.png" alt="base_main upside down showing the bottom-cover rebate with four green D markers on the shelf corners">
+        <i class="pin D" style="left:19.18%;top:52.56%">D</i>
+        <i class="pin D" style="left:21.47%;top:28.96%">D</i>
+        <i class="pin D" style="left:78.49%;top:28.95%">D</i>
+        <i class="pin D" style="left:80.74%;top:52.56%">D</i>
+      </span>
+      <figcaption><b>base_main, upside down</b> (rear pillars toward you). D ×4 in the corners of the screw shelf around the cavity; the slot in the middle is the USB drop slot.</figcaption>
+    </figure>
+  </div>
+
+  <ol class="steps">
+    <li>
+      <h4>Prep the printed parts</h4>
+      <p>Deburr the pockets. Frost one face of the diffuser with 400–600 grit until it's evenly matte. Snip 19 pins from 1.75 mm filament: 18 × ~2.5 mm (chevrons), 1 × ~3 mm (registration).</p>
+      <p>Set all 14 M2 heat-set inserts per the <a href="#inserts">maps above</a>: A ×4 in <code>gate_rear</code>'s <em>front</em> face, B ×4 + C ×2 in its <em>back</em> face, D ×4 in <code>base_main</code>'s cavity shelf. Keep the iron square — the bosses are 5 mm deep.</p>
+      <span class="check">an M2 screw runs in and out of each insert three times without stripping (that's what coupon A proved)</span>
+    </li>
+    <li>
+      <h4>Pin the chevrons</h4>
+      <p>A drop of CA in each of the 18 pin holes on <code>gate_front</code>'s outer ring, pins in, then the nine chevrons over their pin pairs at 40° pitch — one dead at 6 o'clock, on the dock's centreline (v2 clocking, 2026-08-20). Each chevron body bridges the two front-plate screw holes sitting 5° either side of it, so fit chevrons <em>after</em> the front plate is screwed down if you'd rather keep the screws reachable (see step 8).</p>
+    </li>
+    <li>
+      <h4>Registration pin</h4>
+      <p>Glue the 3 mm pin into the Ø2 blind hole in <code>gate_rear</code>'s front face at 95° (r 52, deliberately off the 10° groove grid). It mates with the hole at 85° on the back of <code>gate_front</code> and is the only thing stopping the front plate going on 90° out.</p>
+    </li>
+    <li>
+      <h4>Seat the screen puck</h4>
+      <p>Drop the Waveshare puck into <code>gate_rear</code>'s Ø51.5 pocket <strong>USB-C toward 6 o'clock</strong> (the tunnel). Its side buttons should land in the two wall reliefs at 11 and 1 o'clock — if it won't go home, you're a few degrees off. Press the case rim until it sits on the three crush ribs (~0.2 mm preload).</p>
+      <span class="check">puck doesn't rattle; a strip of paper slides under the bezel — glass untouched</span>
+    </li>
+    <li>
+      <h4>USB-C extension</h4>
+      <p>Plug the right-angle male end into the puck; the cable drops straight down the 16 × 10 tunnel at 6 o'clock — the gate's only rim opening. Leave the female end hanging for now.</p>
+    </li>
+    <li>
+      <h4>LED ring + leads</h4>
+      <p>Lay the 24-LED ring in the annular pocket (OD 74 / ID 58 / 4.3 deep). It should drop in and rotate freely (coupon C). Clock it so its flying leads exit through the 14 mm through-slot at the <strong>viewer's 3 o'clock</strong>, header side; the leads loop across the open back face into the header cavity. Wire 5V, GND and Din to the puck's rear 8-pin header (or to the WROOM if you're running the shipped firmware), with the 330 Ω spliced into the Din lead at the ring end and the 1N5822 in the 5 V lead, stripe toward the ring — <a href="#wiring">wiring</a>.</p>
+      <div class="note"><b>Firmware note.</b> With the leads at 3 o'clock, LED index 0 is 6 LEDs away from where the shipped firmware assumes it — a one-constant fix in <code>ring.py</code>, still open <span class="tag todo">firmware</span>.</div>
+    </li>
+    <li>
+      <h4>Diffuser</h4>
+      <p>Frosted face out, on top of the ring. It sits 0.2 mm proud of the pocket on purpose — the front plate preloads it, so nothing rattles and no light leaks between windows.</p>
+    </li>
+    <li>
+      <h4>Front plate on</h4>
+      <p>Line the 85° hole up with the registration pin, seat <code>gate_front</code>, and drive the 4× M2 × 8 pan-heads at 45/135/225/315° into the front-face inserts. Snug, not torqued — the mullions between windows are 0.6 mm+ lines, not structure.</p>
+      <span class="check">every LED sits behind its own window; power the ring and look for bleed between windows</span>
+    </li>
+    <li>
+      <h4>Rear cover</h4>
+      <p>Tuck the lead loop and header cavity tidy. Offer up <code>rear_cover</code>: its 1.3 mm lip drops into the recessed groove on <code>gate_rear</code>'s back — it only seats where the lip's gap lines up with the USB tunnel arc, so if it rocks, rotate it. On v2 covers each screw runs inside an internal guide boss, so the tip arrives at the insert mouth by itself instead of being fished across the cavity. 4× M2 × 10 countersunk at 30/150/225/315° (v2 angles — v1 prints have 250/290, which the pillars pinch) — the shank crosses the cover's own cavity before it reaches the insert. The gate stack is now one 26 mm drum.</p>
+      <span class="check">cover sits flush, no rock, lifts out cleanly before screwing (coupon D)</span>
+    </li>
+    <li>
+      <h4>Cable through the dock</h4>
+      <p>Feed the extension's female end down through the platform drop slot into <code>base_main</code>'s cavity and out the 16 × 14 × 12 rear-wall port. There's no panel socket — the port is a plain through-hole; the female end lives just inside or just proud of the wall, whichever your cable prefers.</p>
+    </li>
+    <li>
+      <h4>Seat the gate</h4>
+      <p>Lower the stack so its Ø110 rim beds into the two cradle lugs (±30° off bottom, 0.25 mm running clearance) with its back flush against the two rear pillars. Drive the 2× M2 × 20 from behind, straight through each pillar and the cover's pass-through, into <code>gate_rear</code>'s back-face inserts — on v2 covers the tip runs inside a guide boss for the cavity crossing. Shear load only — nothing side-drives.</p>
+      <span class="check">from a normal seated position all 24 windows are visible, including 6 o'clock; the base does not tip under a firm touchscreen press</span>
+    </li>
+    <li>
+      <h4>Close the base</h4>
+      <p>Cables inside, <code>base_bottom</code> on with 4× M2 × 6, rubber feet in their recesses. Plug in at the rear port. On boot the puck (or WROOM) prints <code>ring: listening on http://&lt;ip&gt;:80/hook</code>; the ring shows one dim cyan pixel creeping round — idle.</p>
+    </li>
+  </ol>
+  <p><strong>Service:</strong> two screws free the gate from the dock; four free the cover for the header; four free the front for the ring or puck. Nothing needs to be cut or unglued except a chevron.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="firmware" class="reveal">
+  <div class="kicker">08 · Firmware &amp; hooks</div>
+  <h2>Setup</h2>
+  <h3 id="wiring"><span class="n">0</span>Wiring — ring to the Keyestudio ESP32</h3>
+  <p>Three wires. The board is a Keyestudio ESP32-WROOM-32E (Jaycar XC3800); the ring is the Jaycar XC4385.</p>
+  <div class="wiregrid">
+  <div class="wiring">
+    <svg viewBox="0 0 780 366" role="img" aria-label="Wiring diagram: ring Din to ESP32 IO13, VCC to 5V, Gnd to GND">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/></marker>
+      </defs>
+      <!-- ring -->
+      <g transform="translate(140,128)">
+        <circle r="98" fill="none" stroke="#2c1f52" stroke-width="22"/>
+        <circle r="98" fill="none" stroke="rgba(34,224,255,.22)" stroke-width="1"/>
+        <g fill="#8A5CFF" opacity=".9"><circle cx="0.0" cy="-98.0" r="5"/><circle cx="25.4" cy="-94.7" r="5"/><circle cx="49.0" cy="-84.9" r="5"/><circle cx="69.3" cy="-69.3" r="5"/><circle cx="84.9" cy="-49.0" r="5"/><circle cx="94.7" cy="-25.4" r="5"/><circle cx="98.0" cy="0.0" r="5"/><circle cx="94.7" cy="25.4" r="5"/><circle cx="84.9" cy="49.0" r="5"/><circle cx="69.3" cy="69.3" r="5"/><circle cx="49.0" cy="84.9" r="5"/><circle cx="25.4" cy="94.7" r="5"/><circle cx="0.0" cy="98.0" r="5"/><circle cx="-25.4" cy="94.7" r="5"/><circle cx="-49.0" cy="84.9" r="5"/><circle cx="-69.3" cy="69.3" r="5"/><circle cx="-84.9" cy="49.0" r="5"/><circle cx="-94.7" cy="25.4" r="5"/><circle cx="-98.0" cy="0.0" r="5"/><circle cx="-94.7" cy="-25.4" r="5"/><circle cx="-84.9" cy="-49.0" r="5"/><circle cx="-69.3" cy="-69.3" r="5"/><circle cx="-49.0" cy="-84.9" r="5"/><circle cx="-25.4" cy="-94.7" r="5"/></g>
+        <text x="0" y="-4" text-anchor="middle" font-family="var(--font-display)" font-size="15" fill="#E9E6FF">XC4385</text>
+        <text x="0" y="14" text-anchor="middle" font-family="var(--font-mono)" font-size="10.5" fill="#7C76A8" letter-spacing="1">24 × WS2812B · 5 V</text>
+      </g>
+      <text x="18" y="22" font-family="var(--font-mono)" font-size="9.5" fill="#7C76A8">ring underside: Dout · VCC · Gnd | hole | Din · VCC · Gnd — the Dout triplet stays unconnected</text>
+      <!-- Din pad triplet, drawn below the ring -->
+      <g transform="translate(140,258)" font-family="var(--font-mono)" font-size="10.5" fill="#CDC7EA">
+        <rect x="-64" y="-14" width="128" height="34" rx="4" fill="#0c0620" stroke="rgba(138,92,255,.35)"/>
+        <text x="-40" y="0" text-anchor="middle">Din</text><text x="0" y="0" text-anchor="middle">VCC</text><text x="40" y="0" text-anchor="middle">Gnd</text>
+        <circle cx="-40" cy="11" r="3.5" fill="#22E0FF"/><circle cx="0" cy="11" r="3.5" fill="#FF6B7A"/><circle cx="40" cy="11" r="3.5" fill="#9a94c8"/>
+              </g>
+      <!-- wires: pad dot → board pin, arrowheads at the pins -->
+      <g fill="none" stroke-width="2.5" marker-end="url(#arr)">
+        <path d="M180,272 C 180,296 200,292 220,292 L366,292 C 420,292 420,194 456,194" stroke="#9a94c8"/>
+        <path d="M140,272 C 140,298 152,312 178,312 L366,312 C 433,312 433,104 456,104" stroke="#FF6B7A"/>
+        <path d="M100,272 C 100,316 110,342 148,342 L366,342 C 448,342 448,176 456,176" stroke="#22E0FF"/>
+      </g>
+      <!-- 1N5822 Schottky, in series in the 5 V wire: stripe (cathode) toward the RING -->
+      <g>
+        <rect x="186" y="300" width="172" height="25" rx="4" fill="#0c0620" stroke="rgba(255,107,122,.35)"/>
+        <path d="M186,312 L204,312 M228,312 L358,312" stroke="#FF6B7A" stroke-width="2.5" fill="none"/>
+        <rect x="205" y="305" width="3.5" height="14" fill="#FF6B7A"/>
+        <polygon points="228,305 228,319 210,312" fill="#FF6B7A"/>
+        <text x="238" y="322" font-family="var(--font-mono)" font-size="8.5" fill="#FF6B7A">1N5822 · stripe → ring</text>
+      </g>
+      <!-- 330 Ω, in series in the data wire, close to the ring; not polarised -->
+      <g>
+        <rect x="186" y="330" width="172" height="25" rx="4" fill="#0c0620" stroke="rgba(34,224,255,.35)"/>
+        <path d="M186,342 L202,342 M238,342 L358,342" stroke="#22E0FF" stroke-width="2.5" fill="none"/>
+        <rect x="202" y="336" width="36" height="12" rx="2" fill="#0c0620" stroke="#22E0FF" stroke-width="1.5"/>
+        <text x="220" y="345" text-anchor="middle" font-family="var(--font-mono)" font-size="8" fill="#22E0FF">330Ω</text>
+        <text x="246" y="352" font-family="var(--font-mono)" font-size="8.5" fill="#7C76A8">0.5 W · not polarised</text>
+      </g>
+      <!-- board -->
+      <g transform="translate(460,34)">
+        <rect x="0" y="0" width="300" height="262" rx="8" fill="#0c0620" stroke="rgba(138,92,255,.45)"/>
+        <rect x="95" y="0" width="110" height="46" rx="3" fill="#1a0b3a" stroke="rgba(138,92,255,.35)"/>
+        <text x="150" y="28" text-anchor="middle" font-family="var(--font-mono)" font-size="9.5" fill="#7C76A8" letter-spacing="1">ESP32-WROOM-32E</text>
+        <!-- USB stub, near the 5V pin -->
+        <rect x="-14" y="52" width="16" height="34" rx="3" fill="#2c1f52" stroke="rgba(138,92,255,.4)"/>
+        <text x="-6" y="98" text-anchor="middle" font-family="var(--font-mono)" font-size="8.5" fill="#7C76A8">USB</text>
+        <!-- pin column, counted from the 5V corner -->
+        <g font-family="var(--font-mono)" font-size="11">
+          <g transform="translate(0,70)"><circle r="4.5" fill="#FF6B7A"/><text x="14" y="4" fill="#FF6B7A" font-weight="600">1 · 5V</text><text x="80" y="4" fill="#7C76A8" font-size="9.5">← at the USB end, not the far end</text></g>
+          <g transform="translate(0,90)"><circle r="3" fill="#0c0620" stroke="#FF2EA6"/><text x="14" y="4" fill="#FF2EA6">2 · CMD</text></g>
+          <g transform="translate(0,104)"><circle r="3" fill="#0c0620" stroke="#FF2EA6"/><text x="14" y="4" fill="#FF2EA6">3 · SD3</text><text x="80" y="4" fill="#FF2EA6" font-size="9.5">⚠ SPI flash — touching crashes the board</text></g>
+          <g transform="translate(0,118)"><circle r="3" fill="#0c0620" stroke="#FF2EA6"/><text x="14" y="4" fill="#FF2EA6">4 · SD2</text></g>
+          <g transform="translate(0,142)"><circle r="4.5" fill="#22E0FF"/><text x="14" y="4" fill="#22E0FF" font-weight="600">5 · IO13</text><text x="80" y="4" fill="#7C76A8" font-size="9.5">= LED_PIN in config.py</text></g>
+          <g transform="translate(0,160)"><circle r="4.5" fill="#9a94c8"/><text x="14" y="4" fill="#CDC7EA" font-weight="600">6 · GND</text></g>
+          <g transform="translate(0,180)"><circle r="3" fill="#0c0620" stroke="#7C76A8"/><text x="14" y="4" fill="#7C76A8">7 · IO12  8 · IO14  9 · IO27 … 19 · 3V3</text></g>
+        </g>
+        <text x="150" y="222" text-anchor="middle" font-family="var(--font-display)" font-size="15" fill="#E9E6FF">Keyestudio ESP32 · Jaycar XC3800</text>
+        <text x="150" y="240" text-anchor="middle" font-family="var(--font-mono)" font-size="9.5" fill="#7C76A8" letter-spacing="1">MICROPYTHON · CP2102 USB → /dev/ttyUSB0</text>
+        <text x="150" y="254" text-anchor="middle" font-family="var(--font-mono)" font-size="9.5" fill="#7C76A8">labels on the UNDERSIDE — count from the 5V corner</text>
+      </g>
+    </svg>
+  </div>
+  <figure class="wirephoto">
+    <img src="img/wiring-ring-pads.png" alt="Photo of the XC4385 ring's solder pads: the Dout/VCC/Gnd triplet above the mounting hole, the Din/VCC/Gnd triplet below it, with red flying leads soldered on">
+    <figcaption><b>The real pads</b> (XC4385 manual). Two triplets split by the mounting hole — <code>Dout·VCC·Gnd</code> above, <code>Din·VCC·Gnd</code> below. Solder to the <code>Din</code> triplet; the other three leads stay unconnected.</figcaption>
+  </figure>
+  <figure class="puckphoto">
+    <img src="img/wiring-puck-rear.jpg" alt="Rear of the Waveshare ESP32-S3 Touch AMOLED puck, rotated so its 8-pin header is on the right, with each pin labelled: 5V, G, 3.3V, TX, RX, GPIO 16, 17, 18; the two JST connectors on the left labelled BAT and SPK">
+    <figcaption><b style="color:var(--ink)">The enclosure's brain — Waveshare ESP32-S3-Touch-AMOLED-1.75-B, rear.</b><br>
+    Rotated so the 8-pin header sits at 3 o'clock — the same side as the gate's lead through-slot. On the running build (the <code>console/</code> firmware) the ring's three leads terminate here instead of the Keyestudio board: <span style="color:var(--coral)">VCC → 5V</span> · <span style="color:#b9b3dd">Gnd → G</span> · <span class="cy">Din → one of GPIO 16 / 17 / 18</span> (picked at port time — <code>LED_PIN</code> changes to match). The same in-line rules apply: 330 Ω in the Din lead, 1N5822 in the 5 V lead with its stripe toward the ring. RX/TX stay free for serial; 3.3 V is not for the ring. The two MX1.25 JSTs are battery (BAT) and speaker (SPK) — unused here, but the enclosure keeps them reachable.</figcaption>
+  </figure>
+  </div>
+  <div class="tbl-wrap"><table>
+    <tr><th>Ring pad</th><th>ESP32 pin</th><th>Notes</th></tr>
+    <tr><td><code>Din</code></td><td><code>IO13</code> — pin 5 from the 5V corner</td><td><code>LED_PIN = 13</code> in <code>config.py</code>. The <strong>330 Ω goes in this wire</strong>, spliced close to the ring. Bare, the board drives 3.3 V data into a 5 V WS2812B — marginal; the 1N5822 below is what makes it solid</td></tr>
+    <tr><td><code>VCC</code></td><td><code>5V</code> — pin 1, at the <strong>USB end</strong></td><td>Not the far end as a standard DevKitC would put it. Between 5V and IO13 sit CMD/SD3/SD2 (SPI flash) — touching them crashes the board, so count carefully: 5V, skip three, IO13, GND. The <strong>1N5822 goes in this wire</strong>, stripe toward the ring</td></tr>
+    <tr><td><code>Gnd</code></td><td><code>GND</code> — pin 6, right after IO13</td><td>Common ground; if you ever add a separate 5 V supply, tie its ground here too</td></tr>
+    <tr><td><code>Dout</code> triplet</td><td>—</td><td>Leave unconnected — daisy-chain only. Ring underside is two triplets split by a mounting hole: <code>Dout VCC Gnd | Din VCC Gnd</code>; probe the two outermost data pads — no beep = that order, beep = you're reading it backwards</td></tr>
+  </table></div>
+  <h4 style="margin:18px 0 6px;font-size:15px;color:#fff">In-line components</h4>
+  <div class="tbl-wrap"><table>
+    <tr><th>Component</th><th>Goes in</th><th>Orientation</th><th>Why</th></tr>
+    <tr><td>330 Ω 0.5 W resistor</td><td>the <span class="cy">data</span> wire (IO13 → <code>Din</code>), spliced <strong>close to the ring end</strong></td><td>None — resistors fit either way round</td><td>Damps the reflections/overshoot on the data edge and protects the first LED's input pin</td></tr>
+    <tr><td>1N5822 Schottky diode</td><td>the <span style="color:var(--coral)">5 V</span> wire (5V → <code>VCC</code>)</td><td><strong>Polarised.</strong> The stripe printed on the body = cathode → faces the <strong>ring</strong>; the unmarked end faces the ESP32. Fitted backwards the ring simply never lights — annoying but harmless</td><td>Drops ~0.3–0.4 V so the ring runs at ≈4.6 V, and the ESP32's 3.3 V data then clears the WS2812B's 0.7 × V<sub>DD</sub> logic-high threshold (≈3.2 V) with real margin — this retires an earlier flicker caveat</td></tr>
+  </table></div>
+  <p class="mute" style="font-size:13.5px">Power budget: <code>BRIGHTNESS = 24</code> ≈ 150 mA whole ring, fine on USB; full white would be ~1.4 A. The diode's ~0.4 V drop dims the ring a whisker — invisible at this brightness. For the enclosure build the same three wires go to the Waveshare puck's rear 8-pin header instead — pin choice belongs to the firmware port <span class="tag todo">firmware</span>.</p>
+
+  <h3><span class="n">1</span>Flash MicroPython</h3>
+<pre><code>esptool --port /dev/ttyUSB0 erase-flash
+esptool --port /dev/ttyUSB0 -b 460800 write-flash 0x1000 ESP32_GENERIC-*.bin</code></pre>
+
+  <h3><span class="n">2</span>Configure</h3>
+<pre><code>cp config.example.py config.py
+$EDITOR config.py        <span class="c"># WiFi creds; set a STATIC IP — the hook URL is a fixed string</span></code></pre>
+  <p><code>config.py</code> is git-ignored. Key knobs: <code>LED_PIN = 13</code>, <code>LED_COUNT = 24</code>, <code>BRIGHTNESS = 24</code>, <code>THEME = "vapor"</code>, <code>BACKGROUND_HOLD_MS = 90_000</code>, <code>WORKING_TTL_MS = 1 h</code>, <code>SESSION_TTL_MS = 4 h</code>, optional <code>TOKEN</code>.</p>
+
+  <h3><span class="n">3</span>Deploy &amp; find it</h3>
+<pre><code>./deploy.sh /dev/ttyUSB0
+mpremote connect /dev/ttyUSB0      <span class="c"># press RST → "ring: listening on http://&lt;ip&gt;:80/hook"</span></code></pre>
+
+  <h3><span class="n">4</span>Wire the hooks — on every machine that runs Claude Code</h3>
+<pre><code>./install-hooks.sh 192.168.1.200   <span class="c"># merges 9 hooks into ~/.claude/settings.json, timestamped backup first</span>
+./install-hooks.sh --remove        <span class="c"># undo</span></code></pre>
+  <p>Safe to re-run — it replaces this ring's hooks rather than stacking duplicates, so a changed IP is just another run. Manual alternative: merge <code>hooks/settings.snippet.json</code> yourself.</p>
+
+  <h3><span class="n">5</span>Verify without Claude</h3>
+<pre><code>curl -s http://&lt;ip&gt;/                                   <span class="c"># sessions as JSON</span>
+curl -sX POST http://&lt;ip&gt;/hook -H 'Content-Type: application/json' \
+  -d '{"session_id":"test-1","hook_event_name":"Stop"}'   <span class="c"># one pink arc starts pulsing</span>
+curl -sX POST http://&lt;ip&gt;/clear                            <span class="c"># forget everything</span></code></pre>
+</section>
+
+<!-- ============================================================ -->
+<section id="verify" class="reveal">
+  <div class="kicker">09 · Engineering</div>
+  <h2>Verification gates</h2>
+  <p class="lead">Renders lie. Every real defect on this build was invisible to renders, assertions and manifold checks — so the pipeline grew a gate for each one it missed.</p>
+  <div class="tbl-wrap"><table>
+    <tr><th>Gate</th><th>What it catches</th><th>Born from</th></tr>
+    <tr><td><code>tests.scad</code> asserts (mutation-tested)</td><td>fits, fouling, cavity clearances, saddle-floor ≥ 2 mm, 360° window visibility, end-wall coplanarity (scalar triple product)</td><td>an assertion that cannot fail is decoration — each was broken on purpose once</td></tr>
+    <tr><td><code>.echo</code> ERROR grep</td><td>OpenSCAD 2021.01 exits 0 on assertion failure</td><td>—</td></tr>
+    <tr><td><code>tools/count_shells.py</code> + per-shell z-min</td><td>multi-body exports, plates floating above the bed</td><td>coupon A printed twice as air; earlier an ASCII STL read as 538 M triangles → 220 GB commit → OOM, twice</td></tr>
+    <tr><td><code>tools/interference_check.py</code> (trimesh + manifold3d)</td><td>base ∩ gate stack = 0 mm³</td><td>the CGAL version returned "empty" on failure and passed for six steps</td></tr>
+    <tr><td><code>tools/seating_check.py</code></td><td>rear_cover ∩ gate_rear = 0, gate_front ∩ gate_rear = 0, each placed per <code>assembly.scad</code></td><td>a lip flare collided 0.86 mm and no gate looked <em>within</em> the stack</td></tr>
+    <tr><td><code>tools/overhang_check.py</code></td><td>downward faces past the 45° rule with &gt; 2.5 mm reach; revolved tapers measured radially</td><td>a 5 mm cantilever under the flank feet</td></tr>
+    <tr><td>Coupons A–D</td><td>the physical fit of every clearance before a shell prints</td><td>the engineering print: ring bound at 0.3/side, "press-fit" diffuser was a bug</td></tr>
+  </table></div>
+  <p>Lessons carried forward (from <code>enclosure/README.md</code>): fit-check <em>dynamically</em>, not drop-in; thickness-sensitive features need a thickness assert because boolean gates don't measure walls; any gate that treats empty output as PASS must first grep for ERROR; allow-list boxes make gates blind — use semantic rules; a hull of a flat footprint against a tilted top cannot have planar ends, so widen the deck instead of modelling a twist.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="build" class="reveal">
+  <div class="kicker">10 · First light</div>
+  <h2>The build, on the desk</h2>
+  <p class="lead">Printed, assembled, and running — 2026-08-20. The ring is live on the LAN at <code>192.168.1.200</code> and the puck's round screen shows the session count, waiting/working split, and a LIGHTS toggle.</p>
+
+  <div class="buildgrid">
+    <figure class="buildhero">
+      <img src="img/build-first-light.jpg" alt="The assembled Stargate status ring on its dock, lit: pink and cyan arcs behind the 24 windows, the round screen showing 3 agents, 2 waiting 1 working, 192.168.1.200, and a LIGHTS button">
+      <figcaption><b>First light.</b> <code>vapor</code> theme — two sessions pulsing pink for input, one cyan comet working. Bottom chevron clocked to the dock's centreline (see finding 1).</figcaption>
+    </figure>
+    <div>
+      <figure><img src="img/build-cover-screws-1.jpg" alt="Close-up of a rear pillar with its black retention screw; a silver countersunk cover screw is pinched under the pillar's edge, and the braided USB cable passes through the rim tunnel"><figcaption><b>Finding 2 + 3 territory.</b> Braided USB cable through the rim tunnel; a silver cover screw disappearing under the pillar's edge.</figcaption></figure>
+      <figure style="margin-top:14px"><img src="img/build-cover-screws-2.jpg" alt="Top-down close-up of both rear pillars: black pillar screws on top, a silver countersunk cover screw trapped under a pillar's chamfer"><figcaption><b>Finding 3, from above.</b> The 250°/290° cover screws sat only ~2° clear of the pillars — the printed pillars land right on the heads.</figcaption></figure>
+    </div>
+  </div>
+
+  <h3>Field findings → v2 fixes (reprinted: the build in the video runs on them)</h3>
+  <div class="tbl-wrap"><table>
+    <tr><th>#</th><th>Finding on the printed build</th><th>Fix in the CAD</th><th>Parts reprinted</th></tr>
+    <tr><td>1</td><td>Narcosia clocked the front so a chevron sits at the <em>bottom</em>, aligned with the dock's centreline — better than the drawn one-at-12 layout, but the designed registration pin fights it and the bottom chevron ends up slightly off BDC</td><td>Chevron pattern rotated 180°: loops are now <code>270 + k·40</code>, so the pinned, designed clocking puts one chevron exactly at 6 o'clock and centres the gap at 12. Pin stays at 95°</td><td><code>gate_front</code> (pin holes move) + re-pin chevrons</td></tr>
+    <tr><td>2</td><td>The puck doesn't sit perfectly vertical in its pocket, so the USB plug binds in the 16 mm rim tunnel — no room to trim the screen's clocking</td><td><code>USB_W</code> 16 → <strong>22</strong> (+3 mm per side; tunnel cut 24). Rim-tick skip unchanged; registration skip arcs re-derive automatically</td><td><code>gate_rear</code></td></tr>
+    <tr><td>3</td><td>The rear-cover countersunk screws at 250°/290° sit ~2° clear of the pillars (245°/295° ± 7.6°) — the printed pillars land on the screw heads</td><td><code>REAR_COVER_HOLE_ANGLES</code> [30, 150, 250, 290] → <strong>[30, 150, 225, 315]</strong> — the long-deleted tab angles, 9.2° (~6.4 mm) clear of the pillars, flip-symmetry and one-way rotational asymmetry preserved</td><td><code>gate_rear</code> + <code>rear_cover</code></td></tr>
+    <tr><td>4</td><td>Starting the four cover screws is fiddly — each tip crosses 4.2 mm of open cavity blind before finding its hidden insert, bearing on the thin 1.8 mm floor when tightened</td><td>Internal <strong>guide bosses ×6</strong>: Ø6 tubes (Ø9 base collars) at the four cover screws <em>and</em> both pillar pass-throughs continue each bore across the cavity, tips 0.3 mm clear of gate_rear so the lip still defines seating; heads now clamp a 5.7 mm column — this matters most for the pillar M2×20s, the gate's only retention, whose clamp previously bowed the floor into 4.2 mm of air</td><td><code>rear_cover</code> (already on the list)</td></tr>
+    <tr><td>5</td><td>Slicer review of the v2 base: the flared plinth reads as a lip; the deck brickwork stops 15 mm short of the side edges; the flanks are only coursed on their outboard cap</td><td>Plinth deleted (wall runs straight to the bed); deck course lines extended to the side arris and 2 mm over it so they meet the end-wall courses (joints stay capped on-deck); flank front/rear faces coursed with the cap's own band heights so the pattern wraps right around</td><td><code>base_main</code></td></tr>
+  </table></div>
+  <figure style="max-width:640px">
+    <img src="img/rear-cover-bosses.png" alt="Sectioned render of the rear cover interior showing the four guide bosses rising from the floor, each with the M2 bore running through it">
+    <figcaption><b>Finding 4's fix.</b> rear_cover sectioned: guide bosses (all six — cover screws and pillar pass-throughs) continue each bore across the dish interior; tips stop 0.3 mm short of gate_rear so the registration lip still owns the seat.</figcaption>
+  </figure>
+  <p class="mute" style="font-size:13.5px">All four passed the full pipeline (manifold, shells, interference, seating, overhang, mutation-tested asserts). All five went into the v2 reprint, which is the build running in the video. (Findings 1–3 are field findings from the assembled build; 4 is a usability improvement made at the same time.)</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="status" class="reveal">
+  <div class="kicker">11 · Where it stands</div>
+  <h2>Status &amp; open items</h2>
+  <div class="grid2">
+    <div>
+      <h3>Done</h3>
+      <ul class="status-list">
+        <li>Firmware: multi-session arcs, background window, three themes, TTL pruning, WiFi reconnect, hook installer</li>
+        <li><strong>Whole build printed, assembled and RUNNING on the desk (2026-08-20)</strong> — ring live at 192.168.1.200, the puck's screen showing per-state session counts + a LIGHTS toggle (<a href="#build">first light</a>)</li>
+        <li>Enclosure CAD: 7 parts, decoration complete, 22 review rounds, whole-build <strong>PRINT verdict 2026-08-18</strong></li>
+        <li><strong>v2 reprint done</strong>: gate_rear, rear_cover, base_main and gate_front with all five field fixes, assembled and running</li>
+        <li>Coupons A, B, C, D printed and passed; screen pocket, LED pocket, lead slot, registration lip all <code>CONFIRMED</code></li>
+        <li>Two-colour front via 3MF (face + glyph ink), overlap-proved</li>
+        <li><strong>S3 firmware at <code>console/</code></strong> — Arduino/C++, same hooks/protocol/semantics; screen + ring from one board, the ring on the expansion header. The repo root stays the MicroPython/WROOM original</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Open</h3>
+      <ul class="status-list">
+        <li><span class="tag prov">dims</span> <code>config.scad</code> still labels the USB tunnel, glyph ink depth and the <code>DOCK_*</code>/<code>RIM_*</code>/<code>FLANK*</code>/<code>HULL_*</code> values PROVISIONAL: they work on the printed build but weren't individually caliper-checked. Screw lengths (8/10/20/6) are derived from the CAD</li>
+        <li><span class="tag todo">agents</span> Codex and other coding agents: the device only needs an HTTP POST carrying <code>session_id</code> + <code>hook_event_name</code>, so each one needs a small adapter from its own hook/notify system</li>
+        
+        <li><span class="tag todo">roadmap</span> buttons (on order): press to acknowledge a pulsing arc; per-host colour tinting so you can tell <em>which</em> machine wants you; a kawoosh through the puck's MX1.25 speaker, one day</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="repo" class="reveal">
+  <div class="kicker">12 · Repo map</div>
+  <h2>Where things live</h2>
+  <div class="tbl-wrap"><table>
+    <tr><th>Path</th><th>Purpose</th></tr>
+    <tr><td><code>main.py</code> · <code>ring.py</code> · <code>sessions.py</code> · <code>wifi.py</code></td><td>HTTP server + event classification + animation loop · LED painters · session registry/expiry/ordering · connection</td></tr>
+    <tr><td><code>config.example.py</code> · <code>deploy.sh</code> · <code>install-hooks.sh</code> · <code>hooks/settings.snippet.json</code></td><td>template config · copy firmware + reset · merge/remove the nine hooks · the hook block itself</td></tr>
+    <tr><td><code>enclosure/config.scad</code></td><td>Every dimension, tolerance and flag, each <code>CONFIRMED</code> or <code>PROVISIONAL</code> — the single source of truth</td></tr>
+    <tr><td><code>enclosure/{gate_front,gate_rear,diffuser,rear_cover,chevron,base_main,base_bottom}.scad</code></td><td>one export file per printable part; <code>parts.scad</code> = component models; <code>decor.scad</code> = shared brickwork/glyphs; <code>assembly.scad</code>, <code>stack_view.scad</code>, <code>exploded_view.scad</code>, <code>insert_map.scad</code> = view only</td></tr>
+    <tr><td><code>enclosure/tests.scad</code> · <code>enclosure/render.ps1</code> · <code>enclosure/tools/</code></td><td>invariants · the pipeline · the mesh gates (<code>count_shells</code>, <code>interference_check</code>, <code>seating_check</code>, <code>overhang_check</code>, <code>make_3mf</code>)</td></tr>
+    <tr><td><code>enclosure/couponA–D.scad</code></td><td>fit coupons</td></tr>
+    <tr><td><code>enclosure/DESIGN.md</code> · <code>MEASUREMENTS.md</code></td><td>decision ledger · caliper worksheet</td></tr>
+    <tr><td><code>enclosure/print/</code> · <code>enclosure/renders/</code></td><td>pipeline output — git-ignored, regenerated every run</td></tr>
+    <tr><td><code>docs/</code></td><td>this page + its renders</td></tr>
+    <tr><td><code>console/</code></td><td>the successor firmware actually running on the desk build : Arduino/C++ for the ESP32-S3 puck — <code>claude-status-console.ino</code> + <code>ring/ui/layout/motion/sessions/server</code> modules, its own README/docs/tools</td></tr>
+  </table></div>
+</section>
+
+<footer>
+  <span>Stargate Agent Monitor · Narcosia · code MIT · enclosure CC BY-NC-SA 4.0 · <a href="https://github.com/Narcosia/stargate-agent-monitor">source</a></span>
+  <span>page renders regenerated from <code>enclosure/render.ps1</code> cameras with <code>--colorscheme "Tomorrow Night"</code></span>
+</footer>
+</main>
+</div>
+
+<script>
+(function () {
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var noanim = reduce || /[?&]noanim\b/.test(location.search);
+  if (!noanim) document.documentElement.classList.add('anim');
+  else { document.documentElement.style.scrollBehavior = 'auto'; window.addEventListener('load', function(){ var el = location.hash && document.querySelector(location.hash); if (el) el.scrollIntoView(); }); }
+
+  // ---------- live ring: a port of ring.py's render loop ----------
+  var N = 24, MAX = 255;
+  var PAL = { working:[0,220,255], background:[120,60,255], input:[255,0,160], attention:[255,40,90], done:[255,255,255] };
+  var SINE = []; for (var i = 0; i < 64; i++) SINE.push(Math.floor(127.5 * (1 - Math.cos(2*Math.PI*i/64))));
+  function scale(c, lvl){ return [c[0]*lvl/255|0, c[1]*lvl/255|0, c[2]*lvl/255|0]; }
+
+  var svg = document.getElementById('ring'), g = document.getElementById('leds'), leds = [];
+  var ns = 'http://www.w3.org/2000/svg';
+  for (var k = 0; k < N; k++) {
+    // LED 0 at 12 o'clock, clockwise — display convention only
+    var a = (-90 + k * 360 / N) * Math.PI/180;
+    var cx = 150 + 100*Math.cos(a), cy = 150 + 100*Math.sin(a);
+    var halo = document.createElementNS(ns,'circle'); halo.setAttribute('cx',cx); halo.setAttribute('cy',cy); halo.setAttribute('r',13); halo.setAttribute('filter','url(#glow)'); halo.setAttribute('opacity','0');
+    var dot  = document.createElementNS(ns,'circle'); dot.setAttribute('cx',cx); dot.setAttribute('cy',cy); dot.setAttribute('r',7); dot.setAttribute('fill','#120a2a'); dot.setAttribute('stroke','rgba(138,92,255,.25)'); dot.setAttribute('stroke-width','1');
+    g.appendChild(halo); g.appendChild(dot);
+    leds.push({dot:dot, halo:halo});
+  }
+  var frame = new Array(N);
+  function fill(){ for (var i=0;i<N;i++) frame[i]=[0,0,0]; }
+  function comet(lo,hi,col,phase,off,slow){
+    var span=hi-lo, base=scale(col, MAX/5|0);
+    for (var i=lo;i<hi;i++) frame[i]=base;
+    var head = lo + (((phase/slow|0)+off) % span);
+    frame[head]=scale(col,MAX);
+    frame[lo + ((head-lo-1+span)%span)] = scale(col, MAX/2|0);
+  }
+  function pulse(lo,hi,col,phase,speed,off){
+    var lvl = MAX * SINE[((phase*speed/4|0)+off)%64]/255|0; lvl=Math.max(lvl, MAX/6|0);
+    var c=scale(col,lvl); for (var i=lo;i<hi;i++) frame[i]=c;
+  }
+  function paintDone(lo,hi,fade){ var c=scale(PAL.done, MAX*fade/255|0); for (var i=lo;i<hi;i++) frame[i]=c; }
+  function heartbeat(phase){ frame[(phase/12|0)%N] = scale(PAL.working, MAX/8|0); }
+
+  function render(active, phase, now){
+    fill();
+    if (!active.length){ heartbeat(phase); return; }
+    var count=Math.min(active.length,N), gap=count>1?1:0, usable=N-gap*count;
+    if (usable<count){gap=0;usable=N;}
+    var span=usable/count|0, extras=usable%count, pos=0;
+    for (var idx=0; idx<count; idx++){
+      var s=active[idx], lo=pos, hi=lo+span+(idx<extras?1:0); pos=hi+gap;
+      var phase_off=idx*64/count|0, comet_off=idx*span/count|0;
+      if (s.state==='working') comet(lo,hi,PAL.working,phase,comet_off,4);
+      else if (s.state==='background') comet(lo,hi,PAL.background,phase,comet_off,10);
+      else if (s.state==='input') pulse(lo,hi,PAL.input,phase,1,phase_off);
+      else if (s.state==='attention') pulse(lo,hi,PAL.attention,phase,3,phase_off);
+      else if (s.state==='done'){ var el=now-(s.ended||now); paintDone(lo,hi,Math.max(0,255-(el*255/4000|0))); }
+    }
+  }
+  function show(){
+    for (var i=0;i<N;i++){
+      var c=frame[i], on=(c[0]+c[1]+c[2])>0;
+      // gamma lift so the dim comet base reads on screen the way it does in a room
+      var d=c.map(function(v){ return Math.round(255*Math.pow(v/255,0.6)); });
+      var css='rgb('+d[0]+','+d[1]+','+d[2]+')';
+      var lum=Math.max(c[0],c[1],c[2])/255;
+      leds[i].dot.setAttribute('fill', on?css:'#120a2a');
+      leds[i].dot.setAttribute('stroke', on?css:'rgba(138,92,255,.25)');
+      leds[i].halo.setAttribute('fill', css);
+      leds[i].halo.setAttribute('opacity', on? (0.15+0.85*lum).toFixed(2) : '0');
+    }
+  }
+
+  // ---------- scenario: a realistic stretch of a day, or a held state ----------
+  var cap=document.getElementById('demo-cap'), list=document.getElementById('state-list');
+  var held=null, script=[
+    {t:0,    do:function(){return [];}, cap:'no sessions — idle heartbeat'},
+    {t:2500, do:function(){return [{state:'working'}];}, cap:'<b>SessionStart</b> · one session, working'},
+    {t:6000, do:function(){return [{state:'input'}];}, cap:'<b>Stop</b> · turn finished, awaiting your prompt'},
+    {t:9500, do:function(){return [{state:'working'},{state:'working'}];}, cap:'second session starts · ring splits in half'},
+    {t:13000,do:function(){return [{state:'background'},{state:'working'}];}, cap:'<b>SubagentStart</b> · session 1 running agents'},
+    {t:16500,do:function(){return [{state:'background'},{state:'attention'}];}, cap:'<b>permission_prompt</b> on session 2 — it wants you now'},
+    {t:20000,do:function(){return [{state:'input'},{state:'working'}];}, cap:'you replied on 2; agents on 1 finished → input'},
+    {t:23500,do:function(){return [{state:'done',ended:0},{state:'working'}];}, cap:'<b>SessionEnd</b> on 1 · white fade'},
+    {t:27500,do:function(){return [{state:'working'}];}, cap:'back to one session'},
+    {t:31000,do:null}
+  ];
+  var t0=performance.now(), phase=0, active=[], stepIx=-1, last=0;
+  function tick(now){
+    if (now-last>=30){ // FRAME_MS
+      last=now; phase=(phase+1)&0x7FFF;
+      if (held){
+        if (held==='idle') active=[];
+        else if (held==='done'){ if(!active.length||active[0].state!=='done'){active=[{state:'done',ended:now}];} if(now-active[0].ended>4200) active[0].ended=now; }
+        else active=[{state:held}];
+      } else {
+        var t=(now-t0)%script[script.length-1].t, ix=0;
+        for (var i=0;i<script.length-1;i++) if (t>=script[i].t) ix=i;
+        if (ix!==stepIx){ stepIx=ix; active=script[ix].do(); active.forEach(function(s){ if(s.state==='done') s.ended=now; }); cap.innerHTML=script[ix].cap;
+          var cur=active.length?active.map(function(s){return s.state;}):['idle'];
+          [].forEach.call(list.children,function(li){ li.classList.toggle('on', cur.indexOf(li.dataset.state)>=0); }); }
+      }
+      render(active, phase, now); show();
+    }
+    requestAnimationFrame(tick);
+  }
+  [].forEach.call(list.children,function(li){
+    li.addEventListener('click',function(){
+      var st=li.dataset.state;
+      if (held===st){ held=null; stepIx=-1; t0=performance.now(); return; }
+      held=st; active=[]; cap.innerHTML='holding <b>'+st+'</b> — click again to resume the walkthrough';
+      [].forEach.call(list.children,function(x){ x.classList.toggle('on', x===li); });
+    });
+  });
+  if (noanim){ active=[{state:'working'},{state:'input'},{state:'attention'}]; render(active, 6, 0); show(); cap.textContent='working · input · attention (static frame)'; }
+  else requestAnimationFrame(tick);
+
+  // ---------- scroll reveal + nav highlight ----------
+  var secs=[].slice.call(document.querySelectorAll('section.reveal')), links=[].slice.call(document.querySelectorAll('nav.toc a[href^="#"]'));
+  if ('IntersectionObserver' in window){
+    if (!noanim){
+      var io=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting) e.target.classList.add('in'); }); },{rootMargin:'0px 0px -12% 0px'});
+      secs.forEach(function(s){ io.observe(s); });
+    }
+    var io2=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ links.forEach(function(a){ a.classList.toggle('on', a.getAttribute('href')==='#'+e.target.id); }); } }); },{rootMargin:'-30% 0px -60% 0px'});
+    secs.forEach(function(s){ io2.observe(s); });
+  }
+  secs.forEach(function(s){ if (noanim) s.classList.add('in'); });
+})();
+</script>
+</body>
+</html>

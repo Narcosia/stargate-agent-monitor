@@ -1,0 +1,12 @@
+config.py
+__pycache__/
+*.pyc
+
+# Enclosure — BOSL2 is fetched by setup, not vendored (see enclosure/README.md)
+enclosure/libs/
+enclosure/*.stl
+enclosure/*.3mf
+enclosure/*.echo
+enclosure/renders/
+enclosure/print/*
+!enclosure/print/README.md
