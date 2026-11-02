@@ -434,29 +434,30 @@
   <div class="kicker">04 · Bill of materials</div>
   <h2>Materials</h2>
   <p class="lead">Two boards appear here on purpose. The Stargate is built around the Waveshare round-screen puck, which runs the <code>console/</code> firmware and drives the ring from its rear header. The Keyestudio WROOM is only for the original ring-only build (MicroPython, repo root) and isn't needed for the Stargate.</p>
+  <p class="mute">Links go to New Zealand stock (Jaycar NZ and AliExpress). Any equivalent part works: match the spec column.</p>
 
   <h3>Electronics</h3>
   <div class="tbl-wrap"><table>
     <tr><th>Item</th><th>Spec</th><th>Role</th></tr>
-    <tr><td>Waveshare ESP32-S3-Touch-AMOLED-1.75-B</td><td>SKU 31262 · Ø51.00 × 12.10 mm cased · Ø43.76 touch area · side USB-C · rear 8-pin 2.54 mm female header · MX1.25 speaker + battery · PMU</td><td>The gate's centre and the brain (<code>console/</code> firmware)</td></tr>
-    <tr><td>Keyestudio ESP32-WROOM-32E</td><td>MicroPython <code>ESP32_GENERIC</code></td><td>Optional: the original ring-only build, <code>main.py</code>/<code>ring.py</code> (<code>GPIO13</code>)</td></tr>
-    <tr><td>WS2812B ring, 24 LED</td><td>Jaycar XC4385 · OD 72 / ID 60 / 7 wide · 3.5 mm PCB+LED stack · flying leads exit sideways, in-plane</td><td>The gate's inner track <span class="tag ok">measured</span></td></tr>
+    <tr><td><a href="https://www.aliexpress.com/item/1005009067973350.html">Waveshare ESP32-S3-Touch-AMOLED-1.75-B</a><br><span class="mute" style="font-size:12.5px">AliExpress · choose <em>with protective case</em>, which the enclosure is sized for</span></td><td>SKU 31262 · Ø51.00 × 12.10 mm cased · Ø43.76 touch area · side USB-C · rear 8-pin 2.54 mm female header · MX1.25 speaker + battery · PMU</td><td>The gate's centre and the brain (<code>console/</code> firmware)</td></tr>
+    <tr><td><a href="https://www.jaycar.co.nz/duinotech-esp32-main-board-with-wi-fi-and-bluetooth/p/XC3800">Keyestudio ESP32-WROOM-32E</a><br><span class="mute" style="font-size:12.5px">Jaycar NZ XC3800</span></td><td>MicroPython <code>ESP32_GENERIC</code></td><td>Optional: the original ring-only build, <code>main.py</code>/<code>ring.py</code> (<code>GPIO13</code>)</td></tr>
+    <tr><td><a href="https://www.jaycar.co.nz/arduino-compatible-ws2812b-rgb-led-circular-strip/p/XC4385">WS2812B ring, 24 LED</a><br><span class="mute" style="font-size:12.5px">Jaycar NZ XC4385</span></td><td>OD 72 / ID 60 / 7 wide · 3.5 mm PCB+LED stack · flying leads exit sideways, in-plane</td><td>The gate's inner track <span class="tag ok">measured</span></td></tr>
     <tr><td>USB-C extension, right-angle M→F</td><td>0.3 m</td><td>Puck port → base rear-wall port; keeps cable tugs off the puck's soldered connector and lets the gate lift off the base</td></tr>
     <tr><td>5 V USB supply + cable</td><td>≥ 500 mA</td><td>Whole ring ≈ 150 mA at <code>BRIGHTNESS = 24</code> (~9 %). Full white would be ~1.4 A — don't raise brightness on USB power</td></tr>
-    <tr><td>Hook-up wire ×3</td><td>~15 cm, to 2.54 mm header</td><td>5V, GND, Din from the puck's rear header (or the WROOM's pins) to the ring's leads</td></tr>
-    <tr><td>1N5822 Schottky diode + 330 Ω 0.5 W resistor</td><td>axial, one each</td><td>In-line signal conditioning: diode in the 5 V lead (stripe toward the ring), resistor in the data lead at the ring end — see <a href="#wiring">wiring</a></td></tr>
+    <tr><td><a href="https://www.jaycar.co.nz/150mm-plug-to-plug-jumper-leads-40-piece/p/WC6024">Hook-up wire ×3</a><br><span class="mute" style="font-size:12.5px">Jaycar NZ WC6024 plug-to-plug leads</span></td><td>~15 cm, to 2.54 mm header</td><td>5V, GND, Din from the puck's rear header (or the WROOM's pins) to the ring's leads</td></tr>
+    <tr><td><a href="https://www.jaycar.co.nz/diode-1n5822-schottky-40v-3a-do-27/p/ZR1048">1N5822 Schottky diode</a> + <a href="https://www.jaycar.co.nz/330-ohm-0-5-watt-metal-film-resistors-pack-of-8/p/RR0560">330 Ω 0.5 W resistor</a><br><span class="mute" style="font-size:12.5px">Jaycar NZ ZR1048 · RR0560</span></td><td>axial, one each</td><td>In-line signal conditioning: diode in the 5 V lead (stripe toward the ring), resistor in the data lead at the ring end — see <a href="#wiring">wiring</a></td></tr>
   </table></div>
 
   <h3>Fasteners &amp; small parts</h3>
   <div class="tbl-wrap"><table>
     <tr><th>Item</th><th>Qty</th><th>Where</th></tr>
-    <tr><td>M2 heat-set inserts, brass, OD 3.2 × L3–4 (5 mm deep bosses)</td><td>14</td><td>gate_rear front face ×4 (front plate) · gate_rear back face ×4 (rear cover) + ×2 (pillar retention) · base_main ×4 (bottom cover). <span class="tag ok">coupon A</span></td></tr>
+    <tr><td><a href="https://www.aliexpress.com/item/1005004837433548.html">M2 heat-set inserts</a>, brass, OD 3.2 × L3–4 (5 mm deep bosses)<br><span class="mute" style="font-size:12.5px">AliExpress M1.4–M6 assortment</span></td><td>14</td><td>gate_rear front face ×4 (front plate) · gate_rear back face ×4 (rear cover) + ×2 (pillar retention) · base_main ×4 (bottom cover). <span class="tag ok">coupon A</span></td></tr>
     <tr><td>M2 × 8 pan-head screws</td><td>4</td><td>group A: gate_front → gate_rear, at 45/135/225/315°. 4.0 mm under the counterbore + 4 into the insert — <a href="#inserts">stack-ups</a> <span class="tag prov">confirm</span></td></tr>
     <tr><td>M2 × 10 countersunk screws</td><td>4</td><td>group B: rear_cover → gate_rear at r 40, angles 30/150/225/315° (v2; asymmetric — only fits one way). CSK 4.4 × 1.2; the shank crosses the cover's 4.2 mm cavity <span class="tag prov">confirm</span></td></tr>
     <tr><td>M2 × 20 pan-head screws</td><td>2</td><td>group C: through each rear pillar (10 mm), the cover floor and cavity (6 mm), into gate_rear's back-face inserts — the gate's only retention <span class="tag prov">confirm</span></td></tr>
     <tr><td>M2 × 6 pan-head screws</td><td>4</td><td>group D: base_bottom (2 mm plate) → base_main shelf inserts</td></tr>
     <tr><td>1.75 mm filament offcuts</td><td>19</td><td>18 chevron pins (Ø2 × 2.5, two per chevron) + 1 registration pin (Ø2 × 3, gate_rear front @ 95°). CA glue</td></tr>
-    <tr><td>Rubber feet</td><td>4</td><td>recesses in base_bottom</td></tr>
+    <tr><td>Rubber feet, self-adhesive, Ø10 mm or smaller</td><td>4</td><td>Ø10 × 1 mm recesses in base_bottom</td></tr>
   </table></div>
 
   <h3>Filament</h3>
@@ -465,7 +466,7 @@
     <tr><td>Grey (<code>#6E6E6E</code>-ish)</td><td>PLA+ or PETG</td><td>gate_front face, gate_rear, rear_cover</td></tr>
     <tr><td>Black</td><td>same, via AMS</td><td>glyph "ink" — the bottom 0.5 mm of each 0.7 mm engraving, printed as a second solid</td></tr>
     <tr><td>Dark grey</td><td>PLA+ or PETG</td><td>base_main, base_bottom</td></tr>
-    <tr><td>Red</td><td>PLA+</td><td>chevron ×9</td></tr>
+    <tr><td>Black (or red)</td><td>PLA+ or PETG</td><td>chevron ×9 (black on the build shown)</td></tr>
     <tr><td>Translucent / natural</td><td>PETG</td><td>diffuser — frosted after printing with 400–600 grit</td></tr>
   </table></div>
 
